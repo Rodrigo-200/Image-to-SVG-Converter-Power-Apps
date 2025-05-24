@@ -17,15 +17,23 @@ export function useImageConversion() {
       const result = await response.json()
       isBackendConnected.value = result.status === 'OK'
       return isBackendConnected.value
-    } catch (err) {
-      console.error('Backend connection failed:', err)
+    } catch (err) {    console.error('Backend connection failed:', err)
       isBackendConnected.value = false
       return false
     }
-  }  // Helper function to detect borders that would be removed
+  }
+
+  // Helper function to detect borders that would be removed
   const detectBorders = (imageData, width, height) => {
     const data = imageData.data
-    const borderThreshold = 240 // Light colors considered as border
+    const borderThreshold = 220 // Lower threshold for better detection (was 240)
+    
+    console.log('🔍 Starting border detection...', {
+      width,
+      height,
+      threshold: borderThreshold,
+      dataLength: data.length
+    })
     
     // Detect top border
     let topBorder = 0
@@ -92,10 +100,13 @@ export function useImageConversion() {
         }
       }
       if (!isEmptyCol) break
-      rightBorder = width - x
-    }
+      rightBorder = width - x    }
 
-    return { top: topBorder, bottom: bottomBorder, left: leftBorder, right: rightBorder }
+    const result = { top: topBorder, bottom: bottomBorder, left: leftBorder, right: rightBorder }
+    console.log('🔍 Border detection complete:', result)
+    console.log('🔍 Borders found:', result.top > 0 || result.bottom > 0 || result.left > 0 || result.right > 0)
+    
+    return result
   }
   // Live preview function - creates image-like SVG preview with visible border detection
   const updateLivePreview = async (imageFile, settings = {}) => {
@@ -126,11 +137,20 @@ export function useImageConversion() {
 
           // Get image data for processing
           const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-          const data = imageData.data
-
-          // Detect borders if removeBorder is enabled
+          const data = imageData.data          // Detect borders if removeBorder is enabled
           const borders = settings.removeBorder ? detectBorders(imageData, canvas.width, canvas.height) : 
-                         { top: 0, bottom: 0, left: 0, right: 0 }
+                         { top: 0, bottom: 0, left: 0, right: 0 }          // Debug logging for border detection
+          if (settings.removeBorder) {
+            console.log('🔍 Border detection results:', {
+              top: borders.top,
+              bottom: borders.bottom, 
+              left: borders.left,
+              right: borders.right,
+              imageSize: `${canvas.width}x${canvas.height}`
+            })
+            const bordersDetected = borders.top > 0 || borders.bottom > 0 || borders.left > 0 || borders.right > 0
+            console.log('🔍 Borders detected:', bordersDetected)
+          }
 
           // Calculate content area after border removal
           const contentLeft = borders.left
@@ -142,47 +162,52 @@ export function useImageConversion() {
           const pixelSize = 2 // Larger pixels for lower quality but faster processing
           const svgColor = settings.svgColor || '#000000'
           let svgContent = ''
-          
-          // Add definitions for border visualization
+            // Add definitions for border visualization - make orange more visible
           svgContent += `<defs>
             <pattern id="borderHighlight" patternUnits="userSpaceOnUse" width="8" height="8">
-              <rect width="8" height="8" fill="none"/>
-              <rect width="4" height="4" fill="rgba(255, 152, 0, 0.6)" opacity="0.8"/>
-              <rect x="4" y="4" width="4" height="4" fill="rgba(255, 152, 0, 0.6)" opacity="0.8"/>
+              <rect width="8" height="8" fill="rgba(255, 152, 0, 0.4)"/>
+              <rect width="4" height="4" fill="rgba(255, 152, 0, 0.8)"/>
+              <rect x="4" y="4" width="4" height="4" fill="rgba(255, 152, 0, 0.8)"/>
             </pattern>
-            <pattern id="borderStroke" patternUnits="userSpaceOnUse" width="6" height="6">
-              <rect width="6" height="6" fill="none"/>
-              <rect width="3" height="3" fill="#ff9800"/>
-              <rect x="3" y="3" width="3" height="3" fill="#ff9800"/>
+            <pattern id="borderStroke" patternUnits="userSpaceOnUse" width="4" height="4">
+              <rect width="4" height="4" fill="rgba(255, 152, 0, 0.3)"/>
+              <rect width="2" height="2" fill="#ff9800"/>
+              <rect x="2" y="2" width="2" height="2" fill="#ff9800"/>
             </pattern>
-          </defs>\n`
-
-          // Show border areas if removeBorder is enabled
+          </defs>\n`          // Show border areas if removeBorder is enabled - use full image coordinates with enhanced visibility
           if (settings.removeBorder && (borders.top > 0 || borders.bottom > 0 || borders.left > 0 || borders.right > 0)) {
+            // Add border overlay rectangles in original coordinates - more visible orange
             // Top border
             if (borders.top > 0) {
-              svgContent += `<rect x="0" y="0" width="${canvas.width}" height="${borders.top}" fill="url(#borderHighlight)" stroke="#ff9800" stroke-width="1" stroke-dasharray="3,2"/>\n`
+              svgContent += `<rect x="0" y="0" width="${canvas.width}" height="${borders.top}" fill="rgba(255, 152, 0, 0.6)" stroke="#ff9800" stroke-width="2" stroke-dasharray="4,2"/>\n`
             }
-            // Bottom border
+            // Bottom border  
             if (borders.bottom > 0) {
-              svgContent += `<rect x="0" y="${canvas.height - borders.bottom}" width="${canvas.width}" height="${borders.bottom}" fill="url(#borderHighlight)" stroke="#ff9800" stroke-width="1" stroke-dasharray="3,2"/>\n`
+              svgContent += `<rect x="0" y="${canvas.height - borders.bottom}" width="${canvas.width}" height="${borders.bottom}" fill="rgba(255, 152, 0, 0.6)" stroke="#ff9800" stroke-width="2" stroke-dasharray="4,2"/>\n`
             }
             // Left border
             if (borders.left > 0) {
-              svgContent += `<rect x="0" y="0" width="${borders.left}" height="${canvas.height}" fill="url(#borderHighlight)" stroke="#ff9800" stroke-width="1" stroke-dasharray="3,2"/>\n`
+              svgContent += `<rect x="0" y="0" width="${borders.left}" height="${canvas.height}" fill="rgba(255, 152, 0, 0.6)" stroke="#ff9800" stroke-width="2" stroke-dasharray="4,2"/>\n`
             }
             // Right border
             if (borders.right > 0) {
-              svgContent += `<rect x="${canvas.width - borders.right}" y="0" width="${borders.right}" height="${canvas.height}" fill="url(#borderHighlight)" stroke="#ff9800" stroke-width="1" stroke-dasharray="3,2"/>\n`
+              svgContent += `<rect x="${canvas.width - borders.right}" y="0" width="${borders.right}" height="${canvas.height}" fill="rgba(255, 152, 0, 0.6)" stroke="#ff9800" stroke-width="2" stroke-dasharray="4,2"/>\n`
             }
           }
 
           // Create image-like representation with pixelated effect (mimics conversion)
-          const processedPaths = []
+          const processedPaths = []          // Set viewBox - always show full image when borders are detected to display orange highlighting
+          const bordersDetected = borders.top > 0 || borders.bottom > 0 || borders.left > 0 || borders.right > 0
+          const showFullImageForBorders = settings.removeBorder && bordersDetected
           
-          // Process image data to create simplified vector representation
-          for (let y = contentTop; y < contentTop + contentHeight; y += pixelSize) {
-            for (let x = contentLeft; x < contentLeft + contentWidth; x += pixelSize) {
+          // Process image data to create simplified vector representation  
+          const processStartX = settings.removeBorder ? contentLeft : 0
+          const processStartY = settings.removeBorder ? contentTop : 0
+          const processEndX = settings.removeBorder ? contentLeft + contentWidth : canvas.width
+          const processEndY = settings.removeBorder ? contentTop + contentHeight : canvas.height
+          
+          for (let y = processStartY; y < processEndY; y += pixelSize) {
+            for (let x = processStartX; x < processEndX; x += pixelSize) {
               if (x >= canvas.width || y >= canvas.height) continue
               
               const idx = (y * canvas.width + x) * 4
@@ -200,22 +225,20 @@ export function useImageConversion() {
               // Create opacity based on brightness for depth
               const opacity = Math.max(0.2, 1 - (brightness / 255))
               
-              // Adjust coordinates for content area only
-              const adjustedX = x - contentLeft
-              const adjustedY = y - contentTop
+              // When showing borders, use original coordinates. When cropped, use adjusted coordinates
+              const finalX = showFullImageForBorders ? x : (settings.removeBorder ? x - contentLeft : x)
+              const finalY = showFullImageForBorders ? y : (settings.removeBorder ? y - contentTop : y)
               
-              processedPaths.push(`<rect x="${adjustedX}" y="${adjustedY}" width="${pixelSize}" height="${pixelSize}" fill="${svgColor}" opacity="${opacity.toFixed(2)}"/>`)
+              processedPaths.push(`<rect x="${finalX}" y="${finalY}" width="${pixelSize}" height="${pixelSize}" fill="${svgColor}" opacity="${opacity.toFixed(2)}"/>`)
             }
           }
 
           // Add the image content
           svgContent += processedPaths.join('\n')
-
-          // Set viewBox to content area or full image
-          const viewBoxWidth = settings.removeBorder ? Math.max(1, contentWidth) : canvas.width
-          const viewBoxHeight = settings.removeBorder ? Math.max(1, contentHeight) : canvas.height
-          const viewBoxX = settings.removeBorder ? 0 : 0
-          const viewBoxY = settings.removeBorder ? 0 : 0
+          const viewBoxWidth = showFullImageForBorders ? canvas.width : (settings.removeBorder ? Math.max(1, contentWidth) : canvas.width)
+          const viewBoxHeight = showFullImageForBorders ? canvas.height : (settings.removeBorder ? Math.max(1, contentHeight) : canvas.height)
+          const viewBoxX = 0
+          const viewBoxY = 0
 
           const previewSvg = `<svg width="100%" height="100%" viewBox="${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}" xmlns="http://www.w3.org/2000/svg">
             ${svgContent}

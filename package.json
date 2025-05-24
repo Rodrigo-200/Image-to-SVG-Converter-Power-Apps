@@ -1,14 +1,33 @@
 {
   "name": "image-to-svg-converter-power-apps",
-  "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "A Vue.js web application that converts images to SVG format optimized for Microsoft Power Apps",
   "type": "module",
+  "keywords": [
+    "image-to-svg",
+    "power-apps",
+    "vue",
+    "converter",
+    "svg",
+    "image-processing"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/image-to-svg-converter-power-apps.git"
+  },
+  "homepage": "https://github.com/yourusername/image-to-svg-converter-power-apps#readme",
+  "bugs": {
+    "url": "https://github.com/yourusername/image-to-svg-converter-power-apps/issues"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
     "server": "node server.js",
-    "dev:full": "concurrently \"npm run server\" \"npm run dev\""
+    "dev:full": "concurrently \"npm run server\" \"npm run dev\"",
+    "deploy": "node deploy.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

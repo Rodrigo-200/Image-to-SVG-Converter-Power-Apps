@@ -1,39 +1,83 @@
-# Image to SVG Converter for Power Apps
+# 🎨 Image to SVG Converter for Power Apps
 
-A modern, responsive web application built with Vue.js that converts images to SVG format specifically optimized for Microsoft Power Apps. Features a clean interface with multiple input methods, customization options, and real-time preview.
+A modern, responsive web application built with Vue.js that converts images to SVG format specifically optimized for Microsoft Power Apps. Features a clean interface with multiple input methods, advanced border detection, and real-time preview.
 
 ![Vue.js](https://img.shields.io/badge/Vue.js-3.5-4FC08D?style=flat&logo=vue.js&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-6.3-646CFF?style=flat&logo=vite&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-6.0-646CFF?style=flat&logo=vite&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-Backend-339933?style=flat&logo=node.js&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
+
+## 🚀 Quick Start
+
+**Prerequisites:** Node.js 18+ and npm/yarn
+
+```bash
+# Clone and setup
+git clone <repository-url>
+cd image-to-svg-converter-power-apps
+
+# Quick setup (recommended)
+./deploy.sh setup    # Linux/macOS
+deploy.bat setup     # Windows
+
+# Start development
+./deploy.sh dev      # Linux/macOS
+deploy.bat dev       # Windows
+```
+
+Visit `http://localhost:5173` to use the application!
 
 ## ✨ Features
 
 ### 🖼️ Multiple Input Methods
 - **File Upload**: Drag & drop or click to upload image files (JPG, PNG, GIF, WEBP, BMP)
-- **Clipboard Paste**: Paste images directly from clipboard using Ctrl+V
+- **Clipboard Paste**: Paste images directly from clipboard using Ctrl+V  
 - **URL Input**: Enter image URLs to fetch and convert remote images
 
-### 🎨 Customization Options
-- **Border Removal**: Automatically detect and remove whitespace/borders
+### 🔧 Advanced Conversion Features
+- **Smart Border Detection**: Automatically detect and remove whitespace/borders with visual feedback
 - **Color Conversion**: Convert images to single color (perfect for icons)
-- **Background Preview**: Change background color to test SVG visibility
-- **Size Optimization**: Preset sizes optimized for Power Apps controls
-- **Quality Settings**: Balance between file size and detail preservation
+- **Power Apps Optimization**: SVG output optimized for Microsoft Power Apps controls
+- **Real-time Preview**: Live preview with pixelated representation
+- **Quality Control**: Balance between file size and detail preservation
 
-### 💡 User Experience
-- **Modern Design**: Clean, minimal, professional appearance
-- **Smooth Animations**: Subtle transitions and micro-interactions
-- **Responsive Layout**: Works on desktop, tablet, and mobile devices
-- **Dark/Light Theme**: Theme toggle with system preference detection
-- **Real-time Preview**: Instant preview of original and converted SVG
+### 🎨 User Experience
+- **Modern UI**: Clean, minimal design with smooth animations
+- **Responsive Layout**: Works perfectly on desktop, tablet, and mobile
+- **Dark/Light Theme**: Automatic theme detection with manual toggle
+- **Visual Feedback**: Orange border highlighting for detected areas
+- **Professional Icons**: Consistent iconography using Lucide Vue
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 16+ 
-- npm or yarn
+- **Node.js** 16.0 or higher
+- **npm** or **yarn** package manager
 
-### Installation
+### Installation & Setup
+
+#### Quick Setup (Recommended)
+
+Use the automated deployment scripts for easy setup:
+
+**For Linux/macOS:**
+```bash
+git clone <repository-url>
+cd image-to-svg-converter-power-apps
+chmod +x deploy.sh
+./deploy.sh setup     # Install dependencies and build
+./deploy.sh dev       # Start development servers
+```
+
+**For Windows:**
+```cmd
+git clone <repository-url>
+cd image-to-svg-converter-power-apps
+deploy.bat setup      # Install dependencies and build
+deploy.bat dev        # Start development servers
+```
+
+#### Manual Setup
 
 1. **Clone the repository**
    ```bash
@@ -46,125 +90,207 @@ A modern, responsive web application built with Vue.js that converts images to S
    npm install
    ```
 
-3. **Start development server**
+3. **Start the application**
    ```bash
-   npm run dev
+   # Start both frontend and backend servers
+   npm run dev        # Frontend (Vite dev server)
+   npm run server     # Backend (Node.js API server)
    ```
 
 4. **Open in browser**
-   Navigate to `http://localhost:5173` (or the port shown in terminal)
+   ```
+   Frontend: http://localhost:5173
+   Backend:  http://localhost:3001
+   ```
 
-### Build for Production
+#### Deployment Script Commands
 
-```bash
-npm run build
-```
+The deployment scripts provide several convenient commands:
 
-### Preview Production Build
+- `setup` - Install dependencies and build for production
+- `dev` - Start development servers with hot reload
+- `build` - Build application for production
+- `start` - Start production servers
+- `deploy` - Full deployment (setup + start production)
+- `test` - Run test suite (if configured)
+- `lint` - Run code linting (if configured)
 
-```bash
-npm run preview
-```
+## 🎯 Usage Guide
+
+### Basic Workflow
+1. **Choose Input Method**
+   - **Upload**: Click or drag & drop image files
+   - **Clipboard**: Copy an image and paste with Ctrl+V
+   - **URL**: Enter a direct image URL
+
+2. **Configure Settings**
+   - **Remove Border**: Automatically detect and crop whitespace (with orange visual feedback)
+   - **SVG Color**: Convert to single color for consistent theming
+   - **Background Preview**: Test visibility against different backgrounds
+
+3. **Preview & Convert**
+   - View real-time preview with pixelated representation
+   - Backend conversion produces high-quality SVG
+   - Download optimized file ready for Power Apps
+
+### Smart Border Detection
+- **Visual Feedback**: Orange highlighting shows detected border areas
+- **Automatic Cropping**: Removes unnecessary whitespace for cleaner icons
+- **Debug Console**: Detailed logging for troubleshooting border detection
 
 ## 🛠️ Technology Stack
 
-- **Framework**: Vue.js 3 with Composition API
-- **Build Tool**: Vite
-- **UI Icons**: Lucide Vue Next
-- **Image Processing**: Fabric.js
-- **File Handling**: FileSaver.js
-- **Styling**: Modern CSS with CSS Custom Properties
+### Frontend
+- **Vue.js 3** - Modern reactive framework with Composition API
+- **Vite** - Fast build tool and development server
+- **Lucide Vue** - Beautiful, consistent iconography
+- **Modern CSS** - Custom properties, Grid, Flexbox
+
+### Backend
+- **Node.js** - Server-side image processing
+- **Express.js** - REST API for conversion endpoints
+- **Sharp** - High-performance image processing
+- **Canvas** - Image manipulation and SVG generation
 
 ## 📁 Project Structure
 
 ```
-src/
-├── components/           # Vue components
-│   ├── ImageUpload.vue      # File upload with drag & drop
-│   ├── ClipboardPaste.vue   # Clipboard paste functionality
-│   ├── UrlInput.vue         # URL input component
-│   ├── PreviewArea.vue      # Image and SVG preview
-│   ├── ControlsPanel.vue    # Conversion settings
-│   └── ThemeToggle.vue      # Dark/light theme toggle
-├── composables/          # Vue composables
-│   ├── useImageConversion.js # Core conversion logic
-│   └── useClipboard.js      # Clipboard functionality
-├── utils/               # Utility functions
-│   └── svgOptimizer.js     # SVG optimization for Power Apps
-├── assets/              # Static assets
-└── style.css           # Global styles and theme system
+├── src/
+│   ├── components/           # Vue components
+│   │   ├── ImageUpload.vue      # Drag & drop file upload
+│   │   ├── ClipboardPaste.vue   # Clipboard functionality
+│   │   ├── UrlInput.vue         # URL input component
+│   │   ├── PreviewArea.vue      # Live preview with border detection
+│   │   ├── ControlsPanel.vue    # Conversion settings
+│   │   └── ThemeToggle.vue      # Dark/light theme switcher
+│   ├── composables/          # Vue composables
+│   │   ├── useImageConversion.js # Core conversion logic & border detection
+│   │   └── useClipboard.js      # Clipboard handling
+│   ├── utils/               # Utilities
+│   │   └── svgOptimizer.js     # Power Apps SVG optimization
+│   └── style.css           # Global styles and theme system
+├── public/                  # Static assets
+├── server.js               # Backend API server
+├── package.json            # Dependencies and scripts
+└── vite.config.js         # Vite configuration
 ```
 
 ## 🎯 Power Apps Optimization
 
-The generated SVG files are specifically optimized for Microsoft Power Apps:
+### SVG Output Features
+- **Clean Markup**: Minimal code without unnecessary metadata
+- **Optimized Paths**: Compressed path data for smaller files
+- **Proper Scaling**: ViewBox optimization for responsive scaling
+- **Border Removal**: Smart whitespace detection and cropping
+- **Color Consistency**: Single-color conversion for theming
 
-- **Clean Code**: Minimal SVG markup without unnecessary metadata
-- **Optimized Paths**: Compressed path data for smaller file sizes
-- **Proper Attributes**: Compatible with Power Apps SVG requirements
-- **Border Removal**: Automatic whitespace detection and removal
-- **Size Optimization**: Preset dimensions for Power Apps controls
+### Recommended Usage in Power Apps
+1. Upload images with clear borders/whitespace
+2. Enable "Remove Border" for automatic cropping
+3. Use single color conversion for consistent icons
+4. Download and import directly into Power Apps
 
-## 🎨 Usage Guide
-
-### 1. Choose Input Method
-- **Upload**: Click or drag & drop image files
-- **Clipboard**: Copy an image and paste with Ctrl+V
-- **URL**: Enter a direct image URL
-
-### 2. Customize Settings
-- **Remove Border**: Automatically crop whitespace
-- **SVG Color**: Convert to monochrome (great for icons)
-- **Background**: Change preview background color
-- **Quality**: Adjust conversion quality vs file size
-
-### 3. Preview & Download
-- Real-time preview of original vs converted
-- Toggle between different background colors
-- Download optimized SVG file
-
-## 🌟 Key Features in Detail
-
-### Smart Border Detection
-Automatically detects and removes unnecessary borders and whitespace, perfect for creating clean icons that fit Power Apps controls precisely.
-
-### Color Conversion
-Convert multi-color images to single-color SVGs, ideal for creating consistent icon sets that match your Power Apps theme.
-
-### Responsive Design
-Works seamlessly across all devices with touch-friendly controls and adaptive layouts.
-
-### Theme Support
-Built-in light and dark themes that respect system preferences and provide a comfortable experience in any lighting condition.
-
-## 🔧 Development
+## 🚀 Development & Deployment
 
 ### Available Scripts
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
+```bash
+npm run dev     # Start frontend development server (port 5173)
+npm run server  # Start backend API server (port 3001)
+npm run build   # Build frontend for production
+npm run preview # Preview production build
+```
 
-### Code Style
-- Vue.js 3 Composition API with `<script setup>`
-- Modern CSS with custom properties
-- ESLint and Prettier configuration
-- Component-based architecture
+### Development Setup
+1. Both frontend and backend servers must be running
+2. Frontend handles UI and live preview
+3. Backend processes high-quality SVG conversion
+4. Cross-origin requests configured for local development
+
+### Production Deployment
+```bash
+# Build frontend
+npm run build
+
+# Deploy dist/ folder to static hosting
+# Deploy server.js to Node.js hosting platform
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+```bash
+# Backend server port (default: 3001)
+PORT=3001
+
+# Frontend development server port (default: 5173)
+VITE_PORT=5173
+```
+
+### Border Detection Settings
+- **Threshold**: 220 (brightness level for border detection)
+- **Visual Feedback**: Orange highlighting with rgba(255, 152, 0, 0.6)
+- **Debug Logging**: Comprehensive console output for troubleshooting
 
 ## 📝 Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+### Development Guidelines
+1. Use Vue 3 Composition API with `<script setup>`
+2. Follow modern CSS practices with custom properties
+3. Maintain responsive design principles
+4. Add comprehensive error handling
+5. Include debug logging for troubleshooting
+
+### Code Style
+- **Components**: Single File Components with clear separation
+- **Composables**: Reusable logic with proper reactivity
+- **Styling**: CSS custom properties for theming
+- **Error Handling**: Graceful fallbacks and user feedback
+
+## 🐛 Troubleshooting
+
+### Common Issues
+- **Backend Connection**: Ensure both servers are running
+- **Border Detection**: Check console for debug messages
+- **File Upload**: Verify supported image formats (JPG, PNG, GIF, WEBP, BMP)
+- **Clipboard Paste**: Requires HTTPS in production
+
+### Debug Console Output
+When "Remove Border" is enabled, look for:
+```
+🔍 Starting border detection... {width: 300, height: 300, threshold: 220}
+🔍 Border detection complete: {top: 40, bottom: 40, left: 40, right: 40}
+🔍 Borders detected: true
+```
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## 🌟 Features Highlight
 
-- Vue.js team for the amazing framework
+### ✅ Smart Border Detection
+- Enhanced sensitivity algorithm
+- Visual orange highlighting
+- Real-time feedback
+
+### ✅ Multiple Input Methods  
+- File upload with drag & drop
+- Clipboard paste support
+- URL fetching capability
+
+### ✅ Power Apps Ready
+- Optimized SVG output
+- Clean, minimal code
+- Perfect for icons and graphics
+
+### ✅ Modern UI/UX
+- Responsive design
+- Dark/light themes
+- Smooth animations
+
+---
+
+**Perfect for creating clean, optimized SVG icons and graphics for Microsoft Power Apps! 🎨✨**
 - Lucide for the beautiful icons
 - Fabric.js for powerful canvas manipulation
 - Vite for lightning-fast development experience

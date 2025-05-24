@@ -59,7 +59,7 @@ const hasContent = computed(() => {
 })
 
 const canToggleView = computed(() => {
-  return originalImageUrl.value && props.svgResult
+  return originalImageUrl.value && (props.svgResult || props.isLivePreview)
 })
 
 const svgSize = computed(() => {
@@ -80,6 +80,14 @@ const resetView = () => {
 // Watch for changes in SVG result to auto-switch to SVG view
 watch(() => props.svgResult, (newValue) => {
   if (newValue && canToggleView.value) {
+    showOriginal.value = false
+  }
+})
+
+// Auto-switch to SVG view when live preview has border detection enabled
+watch([() => props.svgResult, () => props.removeBorder, () => props.isLivePreview], ([svgResult, removeBorder, isLivePreview]) => {
+  // If we have a live preview and border removal is enabled, show SVG view to display orange borders
+  if (svgResult && isLivePreview && removeBorder && canToggleView.value) {
     showOriginal.value = false
   }
 })
@@ -286,11 +294,16 @@ watch(showBorderPreview, async (show) => {
     <div v-if="hasContent" class="image-info">
       <div class="info-section">
         <h4>{{ showOriginal ? 'Original' : 'SVG' }} Image</h4>
+          <!-- Border removal info -->
+        <div v-if="removeBorder && !showOriginal && svgResult" class="border-info-message">
+          <span class="border-icon">🔶</span>
+          <span class="border-message-text">Orange highlighted areas show detected borders that were removed</span>
+        </div>
         
-        <!-- Border removal info -->
-        <div v-if="removeBorder && !showOriginal" class="border-info-message">
-          <span class="border-icon">🔲</span>
-          <span class="border-message-text">Orange areas show detected borders that were removed</span>
+        <!-- Live preview border info -->
+        <div v-if="removeBorder && isLivePreview && !showOriginal" class="border-info-message">
+          <span class="border-icon">🔶</span>
+          <span class="border-message-text">Live preview: Orange areas show borders that will be removed</span>
         </div>
         
         <div class="info-details">
