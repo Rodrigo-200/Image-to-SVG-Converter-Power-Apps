@@ -42,19 +42,19 @@ if (!fs.existsSync('./vercel.json')) {
 
 const vercelConfig = JSON.parse(fs.readFileSync('./vercel.json', 'utf8'));
 
-// Validate vercel.json structure
-if (!vercelConfig.routes || !Array.isArray(vercelConfig.routes)) {
-    console.error('❌ vercel.json missing routes configuration');
+// Validate modern vercel.json structure (no builds section)
+if (vercelConfig.builds) {
+    console.error('❌ vercel.json should not contain "builds" section (causes conflicts)');
     process.exit(1);
 }
 
-const apiRoutes = vercelConfig.routes.filter(route => route.src.includes('/api/'));
-if (apiRoutes.length < 2) {
-    console.error('❌ vercel.json missing API routes');
+// Check for required configuration
+if (!vercelConfig.buildCommand || !vercelConfig.outputDirectory) {
+    console.error('❌ vercel.json missing buildCommand or outputDirectory');
     process.exit(1);
 }
 
-console.log('✅ vercel.json - Configuration valid');
+console.log('✅ vercel.json - Modern configuration valid');
 
 // Check package.json dependencies
 const packageJson = JSON.parse(fs.readFileSync('./package.json', 'utf8'));

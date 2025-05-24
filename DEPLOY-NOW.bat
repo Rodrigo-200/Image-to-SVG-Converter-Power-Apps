@@ -70,6 +70,7 @@ if errorlevel 1 (
 rem Deploy to Vercel
 echo.
 echo [INFO] 🚀 Starting deployment to Vercel...
+echo [INFO] Using modern Vercel configuration (no build conflicts)
 echo [INFO] This will deploy your app to production
 echo.
 pause

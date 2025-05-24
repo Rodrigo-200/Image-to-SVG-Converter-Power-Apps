@@ -53,3 +53,5 @@ browser-test-*
 # Coverage reports
 coverage/
 *.lcov
+
+.vercel
