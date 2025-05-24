@@ -99,9 +99,10 @@ export function useClipboard() {
     }
     return extensions[mimeType] || 'png'
   }
-
   // Global paste event handler
-  const handleGlobalPaste = (event) => {
+  let globalPasteCallback = null
+
+  const handleGlobalPaste = async (event) => {
     // Only handle paste events when no input is focused
     const activeElement = document.activeElement
     const isInputFocused = activeElement && (
@@ -112,7 +113,10 @@ export function useClipboard() {
 
     if (!isInputFocused) {
       event.preventDefault()
-      return handlePasteEvent(event)
+      const imageFile = await handlePasteEvent(event)
+      if (imageFile && globalPasteCallback) {
+        globalPasteCallback(imageFile)
+      }
     }
   }
 
@@ -130,6 +134,10 @@ export function useClipboard() {
     return null
   }
 
+  const setupGlobalPasteHandler = (callback) => {
+    globalPasteCallback = callback
+  }
+
   onMounted(() => {
     checkSupport()
     document.addEventListener('paste', handleGlobalPaste)
@@ -144,6 +152,7 @@ export function useClipboard() {
     error,
     pasteImage,
     copyText,
-    handlePasteEvent
+    handlePasteEvent,
+    setupGlobalPasteHandler
   }
 }

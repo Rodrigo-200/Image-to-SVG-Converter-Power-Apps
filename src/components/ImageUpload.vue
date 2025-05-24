@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import { Upload, FileImage, X } from 'lucide-vue-next'
 
 const emit = defineEmits(['image-selected'])
@@ -7,12 +7,34 @@ const emit = defineEmits(['image-selected'])
 const dragActive = ref(false)
 const fileInput = ref(null)
 const selectedFile = ref(null)
+const previewUrl = ref(null)
 
 const acceptedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp']
 
 const isValidFile = (file) => {
   return file && acceptedTypes.includes(file.type)
 }
+
+// Watch for file changes to create/cleanup preview URL
+watch(selectedFile, (newFile, oldFile) => {
+  // Clean up old URL
+  if (previewUrl.value) {
+    URL.revokeObjectURL(previewUrl.value)
+    previewUrl.value = null
+  }
+  
+  // Create new URL if we have a file
+  if (newFile) {
+    previewUrl.value = URL.createObjectURL(newFile)
+  }
+}, { immediate: true })
+
+// Clean up on component unmount
+onBeforeUnmount(() => {
+  if (previewUrl.value) {
+    URL.revokeObjectURL(previewUrl.value)
+  }
+})
 
 const handleFileSelect = (file) => {
   if (isValidFile(file)) {
@@ -68,10 +90,6 @@ const formatFileSize = (bytes) => {
   const i = Math.floor(Math.log(bytes) / Math.log(k))
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
-
-const previewUrl = computed(() => {
-  return selectedFile.value ? URL.createObjectURL(selectedFile.value) : null
-})
 </script>
 
 <template>

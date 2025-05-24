@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
-import { Eye, EyeOff, RotateCcw } from 'lucide-vue-next'
+import { ref, computed, watch, onBeforeUnmount } from 'vue'
+import { Eye, EyeOff, RotateCcw, Zap } from 'lucide-vue-next'
 
 const props = defineProps({
   image: {
@@ -14,14 +14,44 @@ const props = defineProps({
   backgroundColor: {
     type: String,
     default: '#ffffff'
+  },
+  isLivePreview: {
+    type: Boolean,
+    default: false
+  },
+  removeBorder: {
+    type: Boolean,
+    default: false
   }
 })
 
 const showOriginal = ref(true)
 const previewContainer = ref(null)
+const imageUrl = ref(null)
+
+// Create and manage blob URL for the image
+watch(() => props.image, (newImage, oldImage) => {
+  // Clean up old URL
+  if (imageUrl.value) {
+    URL.revokeObjectURL(imageUrl.value)
+    imageUrl.value = null
+  }
+  
+  // Create new URL if we have an image
+  if (newImage) {
+    imageUrl.value = URL.createObjectURL(newImage)
+  }
+}, { immediate: true })
+
+// Clean up on component unmount
+onBeforeUnmount(() => {
+  if (imageUrl.value) {
+    URL.revokeObjectURL(imageUrl.value)
+  }
+})
 
 const originalImageUrl = computed(() => {
-  return props.image ? URL.createObjectURL(props.image) : null
+  return imageUrl.value
 })
 
 const hasContent = computed(() => {
@@ -30,6 +60,11 @@ const hasContent = computed(() => {
 
 const canToggleView = computed(() => {
   return originalImageUrl.value && props.svgResult
+})
+
+const svgSize = computed(() => {
+  if (!props.svgResult) return 0
+  return new Blob([props.svgResult]).size
 })
 
 const toggleView = () => {
@@ -52,13 +87,17 @@ watch(() => props.svgResult, (newValue) => {
 const getImageDimensions = (file) => {
   return new Promise((resolve) => {
     const img = new Image()
+    const url = URL.createObjectURL(file)
+    
     img.onload = () => {
+      URL.revokeObjectURL(url) // Clean up the blob URL
       resolve({ width: img.naturalWidth, height: img.naturalHeight })
     }
     img.onerror = () => {
+      URL.revokeObjectURL(url) // Clean up the blob URL even on error
       resolve({ width: 0, height: 0 })
     }
-    img.src = URL.createObjectURL(file)
+    img.src = url
   })
 }
 
@@ -69,6 +108,101 @@ const formatFileSize = (bytes) => {
   const i = Math.floor(Math.log(bytes) / Math.log(k))
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
+
+// Add live preview indicator
+const isUpdating = ref(false)
+
+// Watch for SVG changes to show update indicator
+watch(() => props.svgResult, () => {
+  if (props.isLivePreview) {
+    isUpdating.value = true
+    setTimeout(() => {
+      isUpdating.value = false
+    }, 300)
+  }
+})
+
+// Add border detection preview functionality
+const showBorderPreview = ref(false)
+const borderPreviewUrl = ref(null)
+
+const toggleBorderPreview = () => {
+  showBorderPreview.value = !showBorderPreview.value
+}
+
+// Create a visual preview of where borders will be removed
+const createBorderPreview = async (imageFile) => {
+  if (!imageFile) return null
+  
+  try {
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    const img = new Image()
+    const url = URL.createObjectURL(imageFile)
+    
+    return new Promise((resolve) => {
+      img.onload = () => {
+        URL.revokeObjectURL(url) // Clean up the blob URL
+        canvas.width = img.naturalWidth
+        canvas.height = img.naturalHeight
+        ctx.drawImage(img, 0, 0)
+        
+        // Draw border detection overlay
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+        const data = imageData.data
+        
+        let minX = canvas.width, minY = canvas.height, maxX = 0, maxY = 0
+        
+        for (let y = 0; y < canvas.height; y++) {
+          for (let x = 0; x < canvas.width; x++) {
+            const index = (y * canvas.width + x) * 4
+            const r = data[index], g = data[index + 1], b = data[index + 2], a = data[index + 3]
+            
+            if (a > 10 && (r < 250 || g < 250 || b < 250)) {
+              minX = Math.min(minX, x)
+              minY = Math.min(minY, y)
+              maxX = Math.max(maxX, x)
+              maxY = Math.max(maxY, y)
+            }
+          }
+        }
+        
+        // Draw border outline
+        ctx.strokeStyle = '#ff0000'
+        ctx.lineWidth = 2
+        ctx.setLineDash([5, 5])
+        ctx.strokeRect(minX, minY, maxX - minX, maxY - minY)
+        
+        resolve(canvas.toDataURL())
+      }
+      img.onerror = () => {
+        URL.revokeObjectURL(url) // Clean up the blob URL even on error
+        resolve(null)
+      }
+      img.src = url
+    })
+  } catch (err) {
+    return null
+  }
+}
+
+// Watch for image changes to update border preview
+watch(() => props.image, async (newImage) => {
+  if (newImage && showBorderPreview.value) {
+    borderPreviewUrl.value = await createBorderPreview(newImage)
+  } else {
+    borderPreviewUrl.value = null
+  }
+})
+
+// Watch for border preview toggle
+watch(showBorderPreview, async (show) => {
+  if (show && props.image) {
+    borderPreviewUrl.value = await createBorderPreview(props.image)
+  } else {
+    borderPreviewUrl.value = null
+  }
+})
 </script>
 
 <template>
@@ -94,12 +228,20 @@ const formatFileSize = (bytes) => {
           <EyeOff class="btn-icon" />
           SVG
         </button>
+        
+        <!-- Live Preview Indicator -->
+        <div v-if="isUpdating" class="live-indicator">
+          <Zap class="indicator-icon" />
+          <span>Live Preview</span>
+        </div>
+        
         <button
           @click="resetView"
           class="reset-btn"
           type="button"
         >
           <RotateCcw class="btn-icon" />
+          Reset
         </button>
       </div>
     </div>
@@ -134,14 +276,23 @@ const formatFileSize = (bytes) => {
           v-if="!showOriginal && svgResult"
           class="svg-preview"
           v-html="svgResult"
-        ></div>
+        ></div>        <!-- Live Preview Updating Indicator -->
+        <div v-if="isUpdating" class="updating-indicator">
+          <Zap class="updating-icon" />
+          <span>Updating...</span>
+        </div>
       </div>
-    </div>
-
-    <!-- Image Info -->
+    </div>    <!-- Image Info -->
     <div v-if="hasContent" class="image-info">
       <div class="info-section">
         <h4>{{ showOriginal ? 'Original' : 'SVG' }} Image</h4>
+        
+        <!-- Border removal info -->
+        <div v-if="removeBorder && !showOriginal" class="border-info-message">
+          <span class="border-icon">🔲</span>
+          <span class="border-message-text">Orange areas show detected borders that were removed</span>
+        </div>
+        
         <div class="info-details">
           <div v-if="image" class="info-item">
             <span class="info-label">File:</span>
@@ -154,10 +305,9 @@ const formatFileSize = (bytes) => {
           <div v-if="image" class="info-item">
             <span class="info-label">Type:</span>
             <span class="info-value">{{ image.type }}</span>
-          </div>
-          <div v-if="svgResult" class="info-item">
+          </div>          <div v-if="svgResult" class="info-item">
             <span class="info-label">SVG Size:</span>
-            <span class="info-value">{{ formatFileSize(new Blob([svgResult]).size) }}</span>
+            <span class="info-value">{{ formatFileSize(svgSize) }}</span>
           </div>
         </div>
       </div>
@@ -235,6 +385,7 @@ const formatFileSize = (bytes) => {
 }
 
 .reset-btn:hover {
+  background: rgba(108, 117, 125, 0.1);
   color: var(--text-primary);
   border-color: var(--border-hover);
 }
@@ -328,6 +479,27 @@ const formatFileSize = (bytes) => {
   font-size: 1rem;
 }
 
+.border-info-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 152, 0, 0.1);
+  border: 1px solid rgba(255, 152, 0, 0.3);
+  border-radius: var(--radius-small);
+  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.border-icon {
+  font-size: 1rem;
+}
+
+.border-message-text {
+  color: #ff9800;
+  font-weight: 500;
+}
+
 .info-details {
   display: flex;
   flex-direction: column;
@@ -362,6 +534,98 @@ const formatFileSize = (bytes) => {
   padding: 0.5rem;
   background: var(--bg-secondary);
   border-radius: var(--radius-small);
+}
+
+.updating-indicator {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-small);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  box-shadow: var(--shadow-medium);
+}
+
+.updating-icon {
+  width: 1rem;
+  height: 1rem;
+  animation: spin 1s linear infinite;
+}
+
+.live-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+  color: white;
+  border-radius: var(--radius-small);
+  font-size: 0.875rem;
+  font-weight: 500;
+  animation: pulse 1.5s ease-in-out infinite;
+  box-shadow: 0 2px 8px rgba(0, 120, 212, 0.3);
+}
+
+.indicator-icon {
+  width: 1rem;
+  height: 1rem;
+  animation: zap 0.8s ease-in-out infinite;
+}
+
+.preview-content {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-medium);
+  border: 2px dashed var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.border-preview {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.border-preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0.8;
+  border-radius: var(--radius-medium);
+}
+
+.preview-content:hover .border-preview-image {
+  opacity: 1;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+@keyframes zap {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(-5deg) scale(1.1); }
+  75% { transform: rotate(5deg) scale(1.1); }
 }
 
 @media (max-width: 768px) {

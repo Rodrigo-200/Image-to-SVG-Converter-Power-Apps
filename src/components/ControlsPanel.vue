@@ -216,10 +216,17 @@ const svgColors = [
             Choose the optimal size for your Power Apps control
           </small>
         </div>
-      </div>
-
-      <!-- Convert Button -->
+      </div>      <!-- Convert Button -->
       <div class="control-group">
+        <div class="conversion-info">
+          <div class="info-header">
+            <Zap class="info-icon" />
+            <span>Professional Conversion</span>
+          </div>
+          <p class="info-text">
+            Click "Convert to SVG" to process your image with our backend server using Potrace for crisp, scalable vector graphics.
+          </p>
+        </div>
         <button
           @click="emit('convert')"
           class="convert-btn"
@@ -455,6 +462,36 @@ const svgColors = [
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px var(--primary-color-light);
+}
+
+/* Convert Info */
+.conversion-info {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: var(--radius-medium);
+}
+
+.info-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: rgb(59, 130, 246);
+}
+
+.info-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.info-text {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.4;
 }
 
 /* Convert Button */

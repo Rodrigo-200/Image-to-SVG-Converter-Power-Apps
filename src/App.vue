@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 import ImageUpload from './components/ImageUpload.vue'
 import ClipboardPaste from './components/ClipboardPaste.vue'
 import UrlInput from './components/UrlInput.vue'
@@ -9,7 +9,6 @@ import ThemeToggle from './components/ThemeToggle.vue'
 import { useImageConversion } from './composables/useImageConversion.js'
 import { useClipboard } from './composables/useClipboard.js'
 import { Settings, Download, Palette, Maximize2 } from 'lucide-vue-next'
-import { saveAs } from 'file-saver'
 
 // Application state
 const currentImage = ref(null)
@@ -26,9 +25,15 @@ const settings = reactive({
 // Use composables
 const {
   svgResult,
+  livePreviewSvg,
   isProcessing,
   processingProgress,
+  isBackendConnected,
   convertImageToSvg,
+  updateLivePreview,
+  changeSvgColor,
+  downloadSvg,
+  checkBackendConnection,
   error: conversionError
 } = useImageConversion()
 
@@ -42,11 +47,33 @@ setupGlobalPasteHandler((imageFile) => {
 // Computed properties
 const hasImage = computed(() => currentImage.value !== null)
 const hasSvgResult = computed(() => svgResult.value !== '')
+const currentPreviewSvg = computed(() => livePreviewSvg.value || svgResult.value)
+
+// Watch for settings changes to update live preview (but don't update for color changes if we have SVG result)
+watch([() => settings.removeBorder, () => settings.size], () => {
+  if (currentImage.value) {
+    updateLivePreview(currentImage.value, settings)
+  }
+})
+
+// Watch for color changes to update existing SVG
+watch(() => settings.svgColor, (newColor) => {
+  if (svgResult.value && newColor !== '#000000') {
+    // Update existing SVG color without re-processing
+    const updatedSvg = changeSvgColor(svgResult.value, newColor)
+    // Note: we don't update svgResult here to avoid infinite loops
+    // The preview will show the updated color
+  } else if (currentImage.value && !svgResult.value) {
+    // Only update live preview if we don't have a final result yet
+    updateLivePreview(currentImage.value, settings)
+  }
+})
 
 // Methods
 const handleImageSelected = (imageFile) => {
   currentImage.value = imageFile
-  convertToSvg()
+  // Start live preview immediately
+  updateLivePreview(imageFile, settings)
 }
 
 const convertToSvg = async () => {
@@ -64,12 +91,10 @@ const convertToSvg = async () => {
   }
 }
 
-const downloadSvg = () => {
-  if (!svgResult.value) return
-  
-  const blob = new Blob([svgResult.value], { type: 'image/svg+xml' })
-  saveAs(blob, 'converted-image.svg')
-}
+// Check backend connection on app startup
+onMounted(() => {
+  checkBackendConnection()
+})
 </script>
 
 <template>
@@ -82,7 +107,19 @@ const downloadSvg = () => {
           <h1>Image to SVG Converter</h1>
           <span class="subtitle">Optimized for Power Apps</span>
         </div>
-        <ThemeToggle />
+        <div class="header-controls">
+          <!-- Backend Status Indicator -->
+          <div class="backend-status" :class="{ connected: isBackendConnected, disconnected: !isBackendConnected }">
+            <div class="status-dot"></div>
+            <span class="status-text">
+              {{ isBackendConnected ? 'Backend Connected' : 'Backend Disconnected' }}
+            </span>
+            <button v-if="!isBackendConnected" @click="checkBackendConnection" class="retry-btn">
+              Retry
+            </button>
+          </div>
+          <ThemeToggle />
+        </div>
       </div>
     </header>
 
@@ -146,21 +183,24 @@ const downloadSvg = () => {
             <div class="preview-section">
               <PreviewArea 
                 :image="currentImage"
-                :svg-result="svgResult"
+                :svg-result="currentPreviewSvg"
                 :background-color="settings.backgroundColor"
+                :is-live-preview="!!livePreviewSvg"
+                :remove-border="settings.removeBorder"
               />
             </div>
 
             <!-- Controls Panel -->
             <div class="controls-section">
               <ControlsPanel 
-                v-model:settings="settings"
+                :settings="settings"
+                @update:settings="Object.assign(settings, $event)"
                 @convert="convertToSvg"
               />
               
               <!-- Download Section -->
               <div class="download-section" v-if="hasSvgResult">
-                <button class="download-btn" @click="downloadSvg">
+                <button class="download-btn" @click="() => downloadSvg(svgResult, 'converted-image.svg')">
                   <Download class="btn-icon" />
                   Download SVG
                 </button>
@@ -235,6 +275,61 @@ const downloadSvg = () => {
   font-size: 1.5rem;
   font-weight: 600;
   margin: 0;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.backend-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.backend-status.connected {
+  background: rgba(34, 197, 94, 0.1);
+  color: rgb(34, 197, 94);
+}
+
+.backend-status.disconnected {
+  background: rgba(239, 68, 68, 0.1);
+  color: rgb(239, 68, 68);
+}
+
+.status-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse 2s infinite;
+}
+
+.retry-btn {
+  padding: 0.25rem 0.5rem;
+  background: rgba(239, 68, 68, 0.2);
+  color: rgb(239, 68, 68);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.retry-btn:hover {
+  background: rgba(239, 68, 68, 0.3);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 .subtitle {

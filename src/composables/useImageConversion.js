@@ -1,14 +1,255 @@
-import { ref, reactive } from 'vue'
+import { ref } from 'vue'
+
+const BACKEND_URL = 'http://localhost:3001'
 
 export function useImageConversion() {
   const isProcessing = ref(false)
   const processingProgress = ref(0)
   const error = ref('')
   const svgResult = ref('')
+  const livePreviewSvg = ref('')
+  const isBackendConnected = ref(false)
 
+  // Check if backend is available
+  const checkBackendConnection = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/health`)
+      const result = await response.json()
+      isBackendConnected.value = result.status === 'OK'
+      return isBackendConnected.value
+    } catch (err) {
+      console.error('Backend connection failed:', err)
+      isBackendConnected.value = false
+      return false
+    }
+  }  // Helper function to detect borders that would be removed
+  const detectBorders = (imageData, width, height) => {
+    const data = imageData.data
+    const borderThreshold = 240 // Light colors considered as border
+    
+    // Detect top border
+    let topBorder = 0
+    for (let y = 0; y < height; y++) {
+      let isEmptyRow = true
+      for (let x = 0; x < width; x++) {
+        const idx = (y * width + x) * 4
+        const r = data[idx], g = data[idx + 1], b = data[idx + 2]
+        const brightness = (r + g + b) / 3
+        if (brightness < borderThreshold) {
+          isEmptyRow = false
+          break
+        }
+      }
+      if (!isEmptyRow) break
+      topBorder = y + 1
+    }
+
+    // Detect bottom border
+    let bottomBorder = 0
+    for (let y = height - 1; y >= 0; y--) {
+      let isEmptyRow = true
+      for (let x = 0; x < width; x++) {
+        const idx = (y * width + x) * 4
+        const r = data[idx], g = data[idx + 1], b = data[idx + 2]
+        const brightness = (r + g + b) / 3
+        if (brightness < borderThreshold) {
+          isEmptyRow = false
+          break
+        }
+      }
+      if (!isEmptyRow) break
+      bottomBorder = height - y
+    }
+
+    // Detect left border
+    let leftBorder = 0
+    for (let x = 0; x < width; x++) {
+      let isEmptyCol = true
+      for (let y = 0; y < height; y++) {
+        const idx = (y * width + x) * 4
+        const r = data[idx], g = data[idx + 1], b = data[idx + 2]
+        const brightness = (r + g + b) / 3
+        if (brightness < borderThreshold) {
+          isEmptyCol = false
+          break
+        }
+      }
+      if (!isEmptyCol) break
+      leftBorder = x + 1
+    }
+
+    // Detect right border
+    let rightBorder = 0
+    for (let x = width - 1; x >= 0; x--) {
+      let isEmptyCol = true
+      for (let y = 0; y < height; y++) {
+        const idx = (y * width + x) * 4
+        const r = data[idx], g = data[idx + 1], b = data[idx + 2]
+        const brightness = (r + g + b) / 3
+        if (brightness < borderThreshold) {
+          isEmptyCol = false
+          break
+        }
+      }
+      if (!isEmptyCol) break
+      rightBorder = width - x
+    }
+
+    return { top: topBorder, bottom: bottomBorder, left: leftBorder, right: rightBorder }
+  }
+  // Live preview function - creates image-like SVG preview with visible border detection
+  const updateLivePreview = async (imageFile, settings = {}) => {
+    if (!imageFile) {
+      livePreviewSvg.value = ''
+      return
+    }
+
+    try {
+      // Create canvas for image processing
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      const img = new Image()
+      const url = URL.createObjectURL(imageFile)
+
+      return new Promise((resolve) => {
+        img.onload = () => {
+          URL.revokeObjectURL(url) // Clean up blob URL
+
+          // Set canvas size for preview (optimized for performance vs quality)
+          const maxSize = 150 // Smaller for better performance
+          const scale = Math.min(maxSize / img.naturalWidth, maxSize / img.naturalHeight)
+          canvas.width = img.naturalWidth * scale
+          canvas.height = img.naturalHeight * scale
+
+          // Draw the image
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+
+          // Get image data for processing
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+          const data = imageData.data
+
+          // Detect borders if removeBorder is enabled
+          const borders = settings.removeBorder ? detectBorders(imageData, canvas.width, canvas.height) : 
+                         { top: 0, bottom: 0, left: 0, right: 0 }
+
+          // Calculate content area after border removal
+          const contentLeft = borders.left
+          const contentTop = borders.top
+          const contentWidth = canvas.width - borders.left - borders.right
+          const contentHeight = canvas.height - borders.top - borders.bottom
+
+          // Create image-like SVG with simplified vectorization
+          const pixelSize = 2 // Larger pixels for lower quality but faster processing
+          const svgColor = settings.svgColor || '#000000'
+          let svgContent = ''
+          
+          // Add definitions for border visualization
+          svgContent += `<defs>
+            <pattern id="borderHighlight" patternUnits="userSpaceOnUse" width="8" height="8">
+              <rect width="8" height="8" fill="none"/>
+              <rect width="4" height="4" fill="rgba(255, 152, 0, 0.6)" opacity="0.8"/>
+              <rect x="4" y="4" width="4" height="4" fill="rgba(255, 152, 0, 0.6)" opacity="0.8"/>
+            </pattern>
+            <pattern id="borderStroke" patternUnits="userSpaceOnUse" width="6" height="6">
+              <rect width="6" height="6" fill="none"/>
+              <rect width="3" height="3" fill="#ff9800"/>
+              <rect x="3" y="3" width="3" height="3" fill="#ff9800"/>
+            </pattern>
+          </defs>\n`
+
+          // Show border areas if removeBorder is enabled
+          if (settings.removeBorder && (borders.top > 0 || borders.bottom > 0 || borders.left > 0 || borders.right > 0)) {
+            // Top border
+            if (borders.top > 0) {
+              svgContent += `<rect x="0" y="0" width="${canvas.width}" height="${borders.top}" fill="url(#borderHighlight)" stroke="#ff9800" stroke-width="1" stroke-dasharray="3,2"/>\n`
+            }
+            // Bottom border
+            if (borders.bottom > 0) {
+              svgContent += `<rect x="0" y="${canvas.height - borders.bottom}" width="${canvas.width}" height="${borders.bottom}" fill="url(#borderHighlight)" stroke="#ff9800" stroke-width="1" stroke-dasharray="3,2"/>\n`
+            }
+            // Left border
+            if (borders.left > 0) {
+              svgContent += `<rect x="0" y="0" width="${borders.left}" height="${canvas.height}" fill="url(#borderHighlight)" stroke="#ff9800" stroke-width="1" stroke-dasharray="3,2"/>\n`
+            }
+            // Right border
+            if (borders.right > 0) {
+              svgContent += `<rect x="${canvas.width - borders.right}" y="0" width="${borders.right}" height="${canvas.height}" fill="url(#borderHighlight)" stroke="#ff9800" stroke-width="1" stroke-dasharray="3,2"/>\n`
+            }
+          }
+
+          // Create image-like representation with pixelated effect (mimics conversion)
+          const processedPaths = []
+          
+          // Process image data to create simplified vector representation
+          for (let y = contentTop; y < contentTop + contentHeight; y += pixelSize) {
+            for (let x = contentLeft; x < contentLeft + contentWidth; x += pixelSize) {
+              if (x >= canvas.width || y >= canvas.height) continue
+              
+              const idx = (y * canvas.width + x) * 4
+              const r = data[idx]
+              const g = data[idx + 1]
+              const b = data[idx + 2]
+              const a = data[idx + 3]
+              
+              // Skip transparent or very light pixels
+              if (a < 50) continue
+              
+              const brightness = (r + g + b) / 3
+              if (brightness > 240) continue // Skip very light pixels
+              
+              // Create opacity based on brightness for depth
+              const opacity = Math.max(0.2, 1 - (brightness / 255))
+              
+              // Adjust coordinates for content area only
+              const adjustedX = x - contentLeft
+              const adjustedY = y - contentTop
+              
+              processedPaths.push(`<rect x="${adjustedX}" y="${adjustedY}" width="${pixelSize}" height="${pixelSize}" fill="${svgColor}" opacity="${opacity.toFixed(2)}"/>`)
+            }
+          }
+
+          // Add the image content
+          svgContent += processedPaths.join('\n')
+
+          // Set viewBox to content area or full image
+          const viewBoxWidth = settings.removeBorder ? Math.max(1, contentWidth) : canvas.width
+          const viewBoxHeight = settings.removeBorder ? Math.max(1, contentHeight) : canvas.height
+          const viewBoxX = settings.removeBorder ? 0 : 0
+          const viewBoxY = settings.removeBorder ? 0 : 0
+
+          const previewSvg = `<svg width="100%" height="100%" viewBox="${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}" xmlns="http://www.w3.org/2000/svg">
+            ${svgContent}
+          </svg>`
+
+          livePreviewSvg.value = previewSvg
+          resolve()
+        }
+
+        img.onerror = () => {
+          URL.revokeObjectURL(url) // Clean up blob URL even on error
+          console.error('Failed to load image for live preview')
+          livePreviewSvg.value = ''
+          resolve()
+        }
+
+        img.src = url
+      })
+    } catch (err) {
+      console.error('Live preview error:', err)
+      livePreviewSvg.value = ''
+    }
+  }
+
+  // Main conversion function using backend
   const convertImageToSvg = async (imageFile, settings = {}) => {
     if (!imageFile) {
       throw new Error('No image file provided')
+    }
+
+    // Check backend connection first
+    const connected = await checkBackendConnection()
+    if (!connected) {
+      throw new Error('Backend server is not available. Please start the server with "npm run dev:full"')
     }
 
     isProcessing.value = true
@@ -17,67 +258,64 @@ export function useImageConversion() {
     svgResult.value = ''
 
     try {
-      // Create canvas for image processing
-      const canvas = document.createElement('canvas')
-      const ctx = canvas.getContext('2d')
-      const img = new Image()
+      console.log('🚀 Starting backend conversion...')
+      processingProgress.value = 10
 
-      return new Promise((resolve, reject) => {
-        img.onload = async () => {
-          try {
-            processingProgress.value = 20
+      // Prepare form data
+      const formData = new FormData()
+      formData.append('image', imageFile)
+      formData.append('removeBorder', settings.removeBorder ? 'true' : 'false')
+      formData.append('svgColor', settings.svgColor || '#000000')
+      formData.append('size', settings.size || 'auto')
+      formData.append('quality', settings.quality || 'high')
 
-            // Set canvas dimensions
-            canvas.width = img.naturalWidth
-            canvas.height = img.naturalHeight
-            
-            // Draw image to canvas
-            ctx.drawImage(img, 0, 0)
-            processingProgress.value = 40
-
-            // Process image based on settings
-            let processedCanvas = canvas
-            
-            if (settings.removeBorder) {
-              processedCanvas = await removeBorders(canvas, ctx)
-              processingProgress.value = 60
-            }
-
-            // Convert to SVG
-            const svgContent = await createSvgFromCanvas(processedCanvas, settings)
-            processingProgress.value = 80
-
-            // Optimize SVG
-            const optimizedSvg = optimizeSvg(svgContent, settings)
-            processingProgress.value = 100
-
-            // Store result
-            svgResult.value = optimizedSvg
-
-            setTimeout(() => {
-              isProcessing.value = false
-              processingProgress.value = 0
-            }, 500)
-
-            resolve(optimizedSvg)
-          } catch (err) {
-            isProcessing.value = false
-            processingProgress.value = 0
-            error.value = err.message
-            reject(err)
-          }
-        }
-
-        img.onerror = () => {
-          isProcessing.value = false
-          processingProgress.value = 0
-          error.value = 'Failed to load image'
-          reject(new Error('Failed to load image'))
-        }
-
-        img.src = URL.createObjectURL(imageFile)
+      console.log('📤 Sending to backend with settings:', {
+        removeBorder: settings.removeBorder,
+        svgColor: settings.svgColor,
+        size: settings.size,
+        quality: settings.quality
       })
+
+      processingProgress.value = 30
+
+      // Send to backend
+      const response = await fetch(`${BACKEND_URL}/convert-to-svg`, {
+        method: 'POST',
+        body: formData
+      })
+
+      processingProgress.value = 70
+
+      if (!response.ok) {
+        throw new Error(`Backend error: ${response.status} ${response.statusText}`)
+      }
+
+      const result = await response.json()
+      processingProgress.value = 90
+
+      if (!result.success) {
+        throw new Error(result.error || 'Conversion failed')
+      }
+
+      console.log('✅ Backend conversion successful!')
+      console.log('📊 Original size:', result.originalSize)
+      console.log('📊 SVG size:', result.svgSize)
+
+      // Store result
+      svgResult.value = result.svg
+      livePreviewSvg.value = result.svg
+      processingProgress.value = 100
+
+      // Reset progress after a delay
+      setTimeout(() => {
+        isProcessing.value = false
+        processingProgress.value = 0
+      }, 1000)
+
+      return result.svg
+
     } catch (err) {
+      console.error('❌ Conversion error:', err)
       isProcessing.value = false
       processingProgress.value = 0
       error.value = err.message
@@ -85,152 +323,60 @@ export function useImageConversion() {
     }
   }
 
-  const removeBorders = async (canvas, ctx) => {
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-    const data = imageData.data
-
-    // Find the bounding box of non-transparent/non-white pixels
-    let minX = canvas.width
-    let minY = canvas.height
-    let maxX = 0
-    let maxY = 0
-
-    for (let y = 0; y < canvas.height; y++) {
-      for (let x = 0; x < canvas.width; x++) {
-        const index = (y * canvas.width + x) * 4
-        const r = data[index]
-        const g = data[index + 1]
-        const b = data[index + 2]
-        const a = data[index + 3]
-
-        // Check if pixel is not white/transparent (with some tolerance)
-        const isSignificant = a > 10 && (r < 250 || g < 250 || b < 250)
-
-        if (isSignificant) {
-          minX = Math.min(minX, x)
-          minY = Math.min(minY, y)
-          maxX = Math.max(maxX, x)
-          maxY = Math.max(maxY, y)
-        }
-      }
+  // Simple color change for existing SVG (lightweight operation)
+  const changeSvgColor = (svgString, newColor) => {
+    if (!svgString || !newColor) return svgString
+    
+    return svgString
+      .replace(/fill="[^"]*"/g, `fill="${newColor}"`)
+      .replace(/stroke="[^"]*"/g, `stroke="${newColor}"`)
+  }
+  // Download SVG function
+  const downloadSvg = (svgContent, filename = 'converted-image.svg') => {
+    if (!svgContent) {
+      throw new Error('No SVG content to download')
     }
 
-    // Add small padding
-    const padding = 2
-    minX = Math.max(0, minX - padding)
-    minY = Math.max(0, minY - padding)
-    maxX = Math.min(canvas.width - 1, maxX + padding)
-    maxY = Math.min(canvas.height - 1, maxY + padding)
-
-    // Create new canvas with cropped dimensions
-    const croppedCanvas = document.createElement('canvas')
-    const croppedCtx = croppedCanvas.getContext('2d')
-    
-    const width = maxX - minX + 1
-    const height = maxY - minY + 1
-    
-    croppedCanvas.width = width
-    croppedCanvas.height = height
-    
-    // Draw cropped image
-    croppedCtx.drawImage(
-      canvas,
-      minX, minY, width, height,
-      0, 0, width, height
-    )
-
-    return croppedCanvas
-  }
-
-  const createSvgFromCanvas = async (canvas, settings) => {
-    const width = canvas.width
-    const height = canvas.height
-
-    // Apply size settings
-    let finalWidth = width
-    let finalHeight = height
-
-    switch (settings.size) {
-      case 'small':
-        finalWidth = finalHeight = 64
-        break
-      case 'medium':
-        finalWidth = finalHeight = 128
-        break
-      case 'large':
-        finalWidth = finalHeight = 256
-        break
-      case 'auto':
-      default:
-        // Keep original dimensions
-        break
+    // Ensure SVG has proper XML declaration for better browser compatibility
+    let finalSvgContent = svgContent
+    if (!finalSvgContent.startsWith('<?xml')) {
+      finalSvgContent = '<?xml version="1.0" encoding="UTF-8"?>\n' + finalSvgContent
     }
 
-    if (settings.svgColor && settings.svgColor !== '#000000') {
-      // Convert to single color SVG
-      return createColorSvg(canvas, settings.svgColor, finalWidth, finalHeight)
-    } else {
-      // Create SVG with embedded image
-      const dataUrl = canvas.toDataURL('image/png')
-      return `<svg xmlns="http://www.w3.org/2000/svg" width="${finalWidth}" height="${finalHeight}" viewBox="0 0 ${width} ${height}">
-        <image href="${dataUrl}" width="${width}" height="${height}" preserveAspectRatio="xMidYMid meet"/>
-      </svg>`
-    }
-  }
-
-  const createColorSvg = (canvas, color, width, height) => {
-    const ctx = canvas.getContext('2d')
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-    const data = imageData.data
-
-    // Create path data from significant pixels
-    const paths = []
-    const threshold = 128 // Threshold for considering a pixel significant
-
-    for (let y = 0; y < canvas.height; y += 2) { // Skip every other pixel for performance
-      for (let x = 0; x < canvas.width; x += 2) {
-        const index = (y * canvas.width + x) * 4
-        const r = data[index]
-        const g = data[index + 1]
-        const b = data[index + 2]
-        const a = data[index + 3]
-
-        // Calculate brightness
-        const brightness = (r + g + b) / 3
-        
-        if (a > 10 && brightness < threshold) {
-          paths.push(`M${x},${y}h2v2h-2z`)
-        }
-      }
-    }
-
-    const pathData = paths.join('')
+    // Create blob with proper MIME type
+    const blob = new Blob([finalSvgContent], { 
+      type: 'image/svg+xml;charset=utf-8' 
+    })
+    const url = URL.createObjectURL(blob)
     
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${canvas.width} ${canvas.height}">
-      <path d="${pathData}" fill="${color}"/>
-    </svg>`
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    link.style.display = 'none'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    // Clean up blob URL
+    setTimeout(() => {
+      URL.revokeObjectURL(url)
+    }, 100)
   }
 
-  const optimizeSvg = (svgContent, settings) => {
-    // Basic SVG optimization
-    let optimized = svgContent
-      .replace(/\s+/g, ' ') // Collapse whitespace
-      .replace(/>\s+</g, '><') // Remove whitespace between tags
-      .replace(/\s*=\s*/g, '=') // Remove spaces around equals
-      .replace(/"\s+/g, '" ') // Clean up attribute spacing
-      .trim()
-
-    // Add Power Apps specific attributes
-    if (!optimized.includes('preserveAspectRatio')) {
-      optimized = optimized.replace('<svg', '<svg preserveAspectRatio="xMidYMid meet"')
-    }    return optimized
-  }
+  // Initialize backend connection check
+  checkBackendConnection()
 
   return {
     isProcessing,
     processingProgress,
     error,
     svgResult,
-    convertImageToSvg
+    livePreviewSvg,
+    isBackendConnected,
+    convertImageToSvg,
+    updateLivePreview,
+    changeSvgColor,
+    downloadSvg,
+    checkBackendConnection
   }
 }
