@@ -9,29 +9,56 @@ A modern, responsive web application built with Vue.js that converts images to S
 
 ## 🚀 Quick Start
 
-**Prerequisites:** Node.js 18+ and npm/yarn
+### Local Development
+**Prerequisites:** Node.js 18+ and npm
 
 ```bash
 # Clone and setup
 git clone <repository-url>
 cd image-to-svg-converter-power-apps
+npm install
 
-# Quick setup (recommended)
-./deploy.sh setup    # Linux/macOS
-deploy.bat setup     # Windows
+# Start development (both frontend and backend)
+npm run dev:full
 
-# Start development
-./deploy.sh dev      # Linux/macOS
-deploy.bat dev       # Windows
+# Or start individually
+npm run server  # Backend on port 3001
+npm run dev     # Frontend on port 5173
 ```
 
 Visit `http://localhost:5173` to use the application!
 
+### ☁️ Deploy to Vercel (Production)
+
+**One-click deployment** with full mobile support:
+
+```bash
+# Automated deployment
+./DEPLOY-NOW.bat     # Windows (recommended)
+./deploy-vercel.sh   # Linux/macOS
+
+# Manual deployment
+npm install -g vercel
+npm run build
+vercel --prod
+```
+
+**After deployment:**
+- ✅ Your app will be live at `https://[your-app].vercel.app`
+- ✅ Test mobile connectivity at `[your-url]/vercel-mobile-test.html`
+- ✅ Backend API available at `[your-url]/api/health` and `[your-url]/api/convert-to-svg`
+
 ## 📱 Mobile Access & Testing
 
-**Mobile Optimized!** This application is fully responsive and optimized for mobile devices.
+**Mobile Optimized!** This application is fully responsive and optimized for mobile devices with automatic backend connectivity.
 
-### Quick Mobile Setup
+### 🔧 Smart Backend Detection
+The app automatically detects your environment:
+- **Local Development**: `http://localhost:3001`
+- **Local Mobile**: `http://[YOUR-IP]:3001` 
+- **Vercel Production**: `/api` prefix (same domain)
+
+### Quick Mobile Setup (Local Development)
 ```bash
 # Start with mobile access
 ./start-mobile.bat       # Windows
@@ -42,6 +69,14 @@ Visit `http://localhost:5173` to use the application!
 1. **Direct URL**: `http://YOUR_IP:5173` (IP shown in terminal)
 2. **QR Code**: Open `phone-access.html` and scan with your phone
 3. **Test Page**: Open `mobile-optimization-test.html` for verification
+
+### Production Mobile Testing (Vercel)
+After deploying to Vercel, test mobile connectivity:
+1. Open `[your-vercel-url]/vercel-mobile-test.html` on your mobile device
+2. Run the three connectivity tests:
+   - ✅ Backend Health Check
+   - ✅ Image Conversion Test  
+   - ✅ Custom URL Test
 
 ### Mobile Features
 - ✅ **Touch-optimized interface** with 44px minimum touch targets

@@ -1,16 +1,27 @@
 import { ref } from 'vue'
 
-// Dynamic backend URL based on current location
+// Dynamic backend URL based on current location and environment
 const getBackendUrl = () => {
   const currentHost = window.location.hostname
   const currentProtocol = window.location.protocol
+  const currentPort = window.location.port
   
-  // If accessing from localhost, use localhost backend
-  if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+  // If running in production (Vercel or other hosting)
+  if (currentHost !== 'localhost' && currentHost !== '127.0.0.1') {
+    // For Vercel deployment, use /api prefix
+    if (currentHost.includes('vercel.app') || currentHost.includes('vercel.dev')) {
+      return `${currentProtocol}//${currentHost}/api`
+    }
+    // For other production hosts, use /api prefix
+    return `${currentProtocol}//${currentHost}/api`
+  }
+  
+  // If accessing from localhost with port (development), use localhost backend
+  if (currentPort === '5173' || currentPort === '5174' || currentPort === '5175') {
     return 'http://localhost:3001'
   }
   
-  // If accessing from IP address (mobile), use same IP for backend
+  // If accessing from IP address (local mobile), use same IP for backend
   return `${currentProtocol}//${currentHost}:3001`
 }
 
@@ -25,15 +36,16 @@ export function useImageConversion() {
   const svgResult = ref('')
   const livePreviewSvg = ref('')
   const isBackendConnected = ref(false)
-
   // Check if backend is available
   const checkBackendConnection = async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/health`)
       const result = await response.json()
-      isBackendConnected.value = result.status === 'OK'
+      isBackendConnected.value = result.status === 'healthy' || result.status === 'OK'
+      console.log('✅ Backend connection established:', result)
       return isBackendConnected.value
-    } catch (err) {    console.error('Backend connection failed:', err)
+    } catch (err) {
+      console.error('❌ Backend connection failed:', err)
       isBackendConnected.value = false
       return false
     }
