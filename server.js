@@ -13,15 +13,26 @@ const __dirname = dirname(__filename)
 const app = express()
 const port = 3001
 
-// Configure CORS to allow frontend to access the backend
+// Configure CORS to allow frontend to access the backend from any device
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:5174', 
-    'http://localhost:5175',
-    'http://localhost:5176',
-    'http://localhost:5177'
-  ],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Allow localhost in any format
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return callback(null, true);
+    }
+    
+    // Allow any IP address on the local network (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
+    const localNetworkRegex = /^https?:\/\/(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.)[\d.]+:\d+$/;
+    if (localNetworkRegex.test(origin)) {
+      return callback(null, true);
+    }
+    
+    // For development, allow any origin (you can restrict this in production)
+    return callback(null, true);
+  },
   credentials: true
 }))
 
@@ -171,8 +182,9 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() })
 })
 
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
   console.log(`🚀 SVG Conversion Server running at http://localhost:${port}`)
+  console.log(`📱 Network access: http://YOUR_IP:${port}`)
   console.log(`📡 CORS enabled for http://localhost:5173-5177`)
   console.log(`🎯 Ready to convert images to SVG with Potrace!`)
 })

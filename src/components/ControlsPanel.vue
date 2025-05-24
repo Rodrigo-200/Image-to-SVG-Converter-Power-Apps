@@ -524,18 +524,88 @@ const svgColors = [
 }
 
 @media (max-width: 768px) {
-  .color-grid {
-    grid-template-columns: repeat(6, 1fr);
+  .controls-panel {
+    margin: 0;
+  }
+
+  .controls-content {
+    padding: 1rem;
+    gap: 1.25rem;
   }
   
-  .controls-content {
-    padding: 0.75rem;
+  .control-group {
+    gap: 0.75rem;
+  }
+  
+  .control-group h3 {
+    font-size: 1rem;
+  }
+  
+  .controls-grid {
+    grid-template-columns: 1fr;
     gap: 1rem;
+  }
+  
+  .control-item {
+    padding: 1rem;
+  }
+  
+  .control-item label {
+    font-size: 0.875rem;
+  }
+  
+  .color-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.5rem;
+  }
+  
+  .color-option {
+    width: 36px;
+    height: 36px;
+    min-height: 44px; /* Touch-friendly size */
   }
   
   .custom-color {
     flex-direction: column;
     align-items: stretch;
+    gap: 0.5rem;
+  }
+  
+  .custom-color label {
+    text-align: left;
+  }
+  
+  .color-input-wrapper {
+    width: 100%;
+  }
+  
+  .color-input {
+    width: 100%;
+    height: 44px;
+  }
+  
+  .slider-container {
+    margin-top: 0.5rem;
+  }
+  
+  .range-input {
+    width: 100%;
+    height: 44px;
+  }
+  
+  .select-input {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    min-height: 44px;
+  }
+  
+  .convert-btn {
+    width: 100%;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    min-height: 48px;
+    justify-content: center;
   }
 }
 </style>

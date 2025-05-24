@@ -1,6 +1,22 @@
 import { ref } from 'vue'
 
-const BACKEND_URL = 'http://localhost:3001'
+// Dynamic backend URL based on current location
+const getBackendUrl = () => {
+  const currentHost = window.location.hostname
+  const currentProtocol = window.location.protocol
+  
+  // If accessing from localhost, use localhost backend
+  if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+    return 'http://localhost:3001'
+  }
+  
+  // If accessing from IP address (mobile), use same IP for backend
+  return `${currentProtocol}//${currentHost}:3001`
+}
+
+const BACKEND_URL = getBackendUrl()
+
+console.log('🔗 Backend URL configured:', BACKEND_URL)
 
 export function useImageConversion() {
   const isProcessing = ref(false)

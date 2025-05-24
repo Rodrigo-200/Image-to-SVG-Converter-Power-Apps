@@ -501,21 +501,134 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
-  .workspace-grid {
-    grid-template-columns: 1fr;
+  .app {
+    min-height: 100vh;
+    padding: 0;
   }
-  
+
+  .header {
+    padding: 0.5rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+    background: var(--bg-primary-alpha);
+  }
+
   .header-content {
     padding: 0 1rem;
+    flex-direction: column;
+    gap: 0.5rem;
   }
-  
+
+  .logo {
+    gap: 0.5rem;
+  }
+
+  .logo h1 {
+    font-size: 1.25rem;
+  }
+
+  .subtitle {
+    display: none;
+  }
+
+  .header-controls {
+    width: 100%;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .backend-status {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .status-text {
+    display: none;
+  }
+
+  .main-content {
+    padding: 1rem 0;
+  }
+
   .container {
     padding: 0 1rem;
+    max-width: 100%;
   }
-  
+
+  .workspace-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .input-section, .preview-section, .controls-section {
+    margin-bottom: 1rem;
+  }
+
+  .tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .tab {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .features {
     flex-direction: column;
     align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .feature {
+    width: 100%;
+    max-width: 300px;
+    text-align: center;
+  }
+
+  /* Mobile-specific utility classes */
+  .mobile-full-width {
+    width: 100%;
+  }
+
+  .mobile-center {
+    text-align: center;
+  }
+
+  .mobile-hidden {
+    display: none;
+  }
+
+  /* Touch-friendly buttons */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Better spacing for mobile */
+  .input-section .tab-content {
+    padding: 1rem;
+  }
+
+  /* Mobile preview optimization */
+  .preview-section {
+    order: 2;
+  }
+
+  .controls-section {
+    order: 3;
+  }
+
+  .input-section {
+    order: 1;
   }
 }
 </style>

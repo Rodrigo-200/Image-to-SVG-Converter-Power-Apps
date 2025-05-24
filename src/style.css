@@ -16,6 +16,7 @@
   --bg-primary: #ffffff;
   --bg-secondary: #f8f9fa;
   --bg-tertiary: #f3f2f1;
+  --bg-primary-alpha: rgba(255, 255, 255, 0.9);
   
   --text-primary: #323130;
   --text-secondary: #605e5c;
@@ -53,6 +54,7 @@
   --bg-primary: #1e1e1e;
   --bg-secondary: #2d2d30;
   --bg-tertiary: #3e3e42;
+  --bg-primary-alpha: rgba(30, 30, 30, 0.9);
   
   --text-primary: #ffffff;
   --text-secondary: #cccccc;
@@ -76,6 +78,7 @@
     --bg-primary: #1e1e1e;
     --bg-secondary: #2d2d30;
     --bg-tertiary: #3e3e42;
+    --bg-primary-alpha: rgba(30, 30, 30, 0.9);
     
     --text-primary: #ffffff;
     --text-secondary: #cccccc;
@@ -307,5 +310,146 @@ button:focus-visible {
   }
   button {
     background-color: #f9f9f9;
+  }
+}
+
+/* Mobile-first responsive design */
+@media (max-width: 768px) {
+  /* Base mobile styles */
+  body {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  
+  /* Touch-friendly interaction areas */
+  button, input, select, textarea {
+    min-height: 44px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  /* Typography adjustments */
+  h1 { font-size: 1.75rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.25rem; }
+  h4 { font-size: 1.125rem; }
+  h5 { font-size: 1rem; }
+  h6 { font-size: 0.875rem; }
+  
+  /* Spacing adjustments */
+  .p-1 { padding: 0.5rem; }
+  .p-2 { padding: 0.75rem; }
+  .p-3 { padding: 1rem; }
+  .p-4 { padding: 1.25rem; }
+  
+  .mt-3, .mb-3 { margin-top: 1rem; margin-bottom: 1rem; }
+  .mt-4, .mb-4 { margin-top: 1.25rem; margin-bottom: 1.25rem; }
+  
+  /* Improved scrollbar for mobile */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  
+  /* Better button styles for touch */
+  .btn-primary, .btn-secondary {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    min-height: 48px;
+  }
+  
+  /* Mobile-specific utility classes */
+  .mobile-full-width {
+    width: 100% !important;
+  }
+  
+  .mobile-center {
+    text-align: center !important;
+  }
+  
+  .mobile-hidden {
+    display: none !important;
+  }
+  
+  .mobile-stack {
+    flex-direction: column !important;
+  }
+  
+  .mobile-no-gap {
+    gap: 0 !important;
+  }
+  
+  .mobile-small-gap {
+    gap: 0.5rem !important;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  /* Even more compact spacing */
+  .container {
+    padding: 0 0.75rem;
+  }
+  
+  /* Smaller typography */
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.25rem; }
+  h3 { font-size: 1.125rem; }
+  
+  /* Stack elements more aggressively */
+  .flex {
+    flex-direction: column;
+  }
+  
+  /* Reduce padding in cards */
+  .card {
+    padding: 1rem;
+  }
+}
+
+/* Landscape mobile orientation */
+@media (max-width: 896px) and (orientation: landscape) {
+  /* Optimize for landscape mobile viewing */
+  .header {
+    padding: 0.25rem 0;
+  }
+  
+  .main-content {
+    padding: 0.5rem 0;
+  }
+  
+  /* Make preview areas more compact */
+  .preview-container {
+    height: 200px;
+  }
+}
+
+/* High DPI mobile screens */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Ensure crisp rendering on retina displays */
+  svg, img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  /* Remove hover effects on touch devices */
+  button:hover {
+    transform: none;
+  }
+  
+  /* Larger touch targets */
+  button, input, select {
+    min-height: 48px;
+    min-width: 48px;
+  }
+  
+  /* Better focus styles for touch */
+  button:focus,
+  input:focus,
+  select:focus {
+    outline: 3px solid var(--primary-color);
+    outline-offset: 2px;
   }
 }

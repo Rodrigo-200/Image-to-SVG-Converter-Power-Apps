@@ -642,29 +642,81 @@ watch(showBorderPreview, async (show) => {
 }
 
 @media (max-width: 768px) {
+  .preview-area {
+    margin: 0;
+  }
+
   .preview-header {
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.75rem;
     align-items: stretch;
+    padding: 1rem;
   }
   
   .preview-controls {
     justify-content: center;
+    gap: 0.5rem;
   }
   
   .toggle-btn {
     flex: 1;
     justify-content: center;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    min-height: 44px;
+  }
+  
+  .preview-container {
+    height: 250px;
+    margin: 0;
+  }
+  
+  .preview-item {
+    min-height: 200px;
+    padding: 1rem;
+  }
+  
+  .preview-item h3 {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
   }
   
   .info-item {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.25rem;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-small);
+  }
+  
+  .info-label {
+    font-size: 0.75rem;
+    flex-shrink: 0;
   }
   
   .info-value {
-    text-align: left;
+    text-align: right;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+  
+  .download-section {
+    padding: 1rem;
+  }
+  
+  .download-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 1rem;
+    font-size: 1rem;
+    min-height: 48px;
   }
 }
 </style>

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend Connectivity Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin: 10px 0;
+            min-height: 50px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .test-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .result {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .loading {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .ip-list {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .ip-item {
+            margin: 5px 0;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Backend Connectivity Test</h1>
+        <p>Use this page to test if your phone can connect to the SVG converter backend server.</p>
+        
+        <div class="ip-list">
+            <h3>📡 Available Backend URLs:</h3>
+            <div class="ip-item">Primary: http://192.168.1.89:3001</div>
+            <div class="ip-item">Secondary: http://172.30.208.1:3001</div>
+            <div class="ip-item">Localhost: http://localhost:3001</div>
+        </div>
+
+        <h3>🧪 Connection Tests:</h3>
+        
+        <button class="test-button" onclick="testConnection('http://192.168.1.89:3001')">
+            Test Primary Backend (192.168.1.89:3001)
+        </button>
+        
+        <button class="test-button" onclick="testConnection('http://172.30.208.1:3001')">
+            Test Secondary Backend (172.30.208.1:3001)
+        </button>
+        
+        <button class="test-button" onclick="testConnection('http://localhost:3001')">
+            Test Localhost Backend (localhost:3001)
+        </button>
+
+        <button class="test-button" onclick="testAllConnections()">
+            🚀 Test All Connections
+        </button>
+
+        <div id="results"></div>
+
+        <div style="margin-top: 30px; padding: 20px; background: #e3f2fd; border-radius: 8px;">
+            <h3>📱 Mobile Testing Instructions:</h3>
+            <ol>
+                <li><strong>Ensure Same Network:</strong> Your phone must be on the same WiFi as your computer</li>
+                <li><strong>Test Health Endpoint:</strong> Click the test buttons above</li>
+                <li><strong>Check Firewall:</strong> If tests fail, Windows Firewall may be blocking connections</li>
+                <li><strong>Try Main App:</strong> If tests pass, try the main app at http://192.168.1.89:5173</li>
+            </ol>
+        </div>
+
+        <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 8px;">
+            <h4>🔧 If Tests Fail:</h4>
+            <p><strong>Option 1:</strong> Temporarily disable Windows Firewall</p>
+            <p><strong>Option 2:</strong> Manually add firewall rule for port 3001</p>
+            <p><strong>Option 3:</strong> Check if your router has AP isolation enabled</p>
+        </div>
+    </div>
+
+    <script>
+        function addResult(message, type = 'loading') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+            results.scrollTop = results.scrollHeight;
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testConnection(baseUrl) {
+            const healthUrl = `${baseUrl}/health`;
+            addResult(`🔄 Testing: ${healthUrl}`, 'loading');
+            
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+                
+                const response = await fetch(healthUrl, {
+                    method: 'GET',
+                    signal: controller.signal,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult(`✅ SUCCESS: ${baseUrl} - Server responded with: ${JSON.stringify(data)}`, 'success');
+                    return true;
+                } else {
+                    addResult(`❌ FAILED: ${baseUrl} - HTTP ${response.status}: ${response.statusText}`, 'error');
+                    return false;
+                }
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    addResult(`⏰ TIMEOUT: ${baseUrl} - Connection timed out after 10 seconds`, 'error');
+                } else {
+                    addResult(`❌ ERROR: ${baseUrl} - ${error.message}`, 'error');
+                }
+                return false;
+            }
+        }
+
+        async function testAllConnections() {
+            clearResults();
+            addResult('🚀 Starting comprehensive connectivity test...', 'loading');
+            
+            const urls = [
+                'http://192.168.1.89:3001',
+                'http://172.30.208.1:3001',
+                'http://localhost:3001'
+            ];
+            
+            let successCount = 0;
+            
+            for (const url of urls) {
+                const success = await testConnection(url);
+                if (success) successCount++;
+                await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay between tests
+            }
+            
+            if (successCount > 0) {
+                addResult(`🎉 SUCCESS: ${successCount}/${urls.length} backends are accessible!`, 'success');
+                addResult(`💡 Use the working backend URL in your main app configuration.`, 'success');
+            } else {
+                addResult(`😞 No backends are accessible. Check network connectivity and firewall settings.`, 'error');
+            }
+        }
+
+        // Automatically test localhost on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                addResult('🏠 Auto-testing localhost connection...', 'loading');
+                testConnection('http://localhost:3001');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

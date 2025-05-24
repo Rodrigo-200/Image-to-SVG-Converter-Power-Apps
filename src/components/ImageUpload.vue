@@ -299,17 +299,43 @@ const formatFileSize = (bytes) => {
 
 @media (max-width: 768px) {
   .drop-zone {
-    padding: 1.5rem;
-    min-height: 150px;
+    padding: 1.5rem 1rem;
+    min-height: 120px;
+    margin: 0;
   }
   
   .upload-icon {
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 2rem;
+    height: 2rem;
   }
   
   .upload-content h3 {
-    font-size: 1.125rem;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .upload-content p {
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+  }
+  
+  .upload-button {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+    width: 100%;
+    max-width: 200px;
+  }
+  
+  .file-info {
+    padding: 1rem;
+  }
+  
+  .file-name {
+    font-size: 0.875rem;
+  }
+  
+  .file-details {
+    font-size: 0.75rem;
   }
 }
 </style>

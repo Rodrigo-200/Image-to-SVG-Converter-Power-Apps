@@ -27,6 +27,31 @@ deploy.bat dev       # Windows
 
 Visit `http://localhost:5173` to use the application!
 
+## 📱 Mobile Access & Testing
+
+**Mobile Optimized!** This application is fully responsive and optimized for mobile devices.
+
+### Quick Mobile Setup
+```bash
+# Start with mobile access
+./start-mobile.bat       # Windows
+./deploy.sh mobile       # Linux/macOS
+```
+
+### Mobile Access Options
+1. **Direct URL**: `http://YOUR_IP:5173` (IP shown in terminal)
+2. **QR Code**: Open `phone-access.html` and scan with your phone
+3. **Test Page**: Open `mobile-optimization-test.html` for verification
+
+### Mobile Features
+- ✅ **Touch-optimized interface** with 44px minimum touch targets
+- ✅ **Responsive design** that adapts to all screen sizes  
+- ✅ **Camera integration** for direct photo capture
+- ✅ **Gesture support** for smooth mobile navigation
+- ✅ **Optimized performance** for mobile data and processing
+
+**Requirements**: Phone must be on same WiFi network as development computer.
+
 ## ✨ Features
 
 ### 🖼️ Multiple Input Methods
@@ -114,6 +139,36 @@ The deployment scripts provide several convenient commands:
 - `deploy` - Full deployment (setup + start production)
 - `test` - Run test suite (if configured)
 - `lint` - Run code linting (if configured)
+
+## 📱 Mobile Access
+
+### Access from Phone/Tablet (Same WiFi Network)
+
+**Quick Start for Mobile:**
+```cmd
+# Windows - Easy mobile setup
+start-mobile.bat
+
+# Or manually:
+deploy.bat dev
+```
+
+The app is now configured to be accessible from any device on your local network:
+- **Frontend**: `http://YOUR_IP:5173` (e.g., `http://192.168.1.100:5173`)
+- **Backend**: `http://YOUR_IP:3001` (e.g., `http://192.168.1.100:3001`)
+
+**To find your IP address:**
+```powershell
+# Windows PowerShell
+Get-NetIPAddress -AddressFamily IPv4 | Where-Object {$_.InterfaceAlias -notlike "*Loopback*"}
+```
+
+### Online Hosting (Access from Anywhere)
+See the **[HOSTING-GUIDE.md](HOSTING-GUIDE.md)** for free hosting options including:
+- **Netlify** - Drag & drop deployment
+- **Vercel** - Full-stack hosting with APIs
+- **GitHub Pages** - Static hosting
+- **Railway/Render** - Backend + frontend hosting
 
 ## 🎯 Usage Guide
 
