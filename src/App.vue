@@ -124,7 +124,7 @@ onMounted(() => {
     </header>
 
     <!-- Main Content -->
-    <main class="main-content">
+    <main class="main-content" :class="{ 'processing-active': isProcessing }">
       <div class="container">
         <!-- Input Methods -->
         <section class="input-section">
@@ -170,10 +170,15 @@ onMounted(() => {
 
         <!-- Processing Indicator -->
         <div v-if="isProcessing" class="processing">
-          <div class="progress-bar">
-            <div class="progress-fill" :style="{ width: processingProgress + '%' }"></div>
+          <div class="progress-container">
+            <div class="progress-bar">
+              <div class="progress-fill" :style="{ width: processingProgress + '%' }"></div>
+            </div>
+            <div class="progress-text">
+              <span class="progress-label">Converting to SVG...</span>
+              <span class="progress-percentage">{{ processingProgress }}%</span>
+            </div>
           </div>
-          <p>Converting to SVG... {{ processingProgress }}%</p>
         </div>
 
         <!-- Main Workspace -->
@@ -380,10 +385,21 @@ onMounted(() => {
 
 .processing {
   text-align: center;
-  padding: 2rem;
+  padding: 1.5rem 2rem;
   background: var(--bg-secondary);
   border-radius: 0.5rem;
   margin-bottom: 2rem;
+  border: 1px solid var(--border-color);
+  backdrop-filter: blur(8px);
+  animation: slideInFromTop 0.3s ease-out;
+}
+
+.progress-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 400px;
+  margin: 0 auto;
 }
 
 .progress-bar {
@@ -392,13 +408,69 @@ onMounted(() => {
   background: var(--border-color);
   border-radius: 0.25rem;
   overflow: hidden;
-  margin-bottom: 1rem;
+  position: relative;
 }
 
 .progress-fill {
   height: 100%;
-  background: var(--primary-color);
-  transition: width 0.3s ease;
+  background: linear-gradient(90deg, var(--primary-color), var(--primary-color-light, #4f46e5));
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+.progress-text {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.progress-label {
+  font-weight: 500;
+}
+
+.progress-percentage {
+  font-weight: 600;
+  color: var(--primary-color);
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+}
+
+@keyframes slideInFromTop {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 .workspace-grid {
@@ -605,6 +677,55 @@ onMounted(() => {
 
   .mobile-hidden {
     display: none;
+  }
+
+  /* Mobile processing indicator - sticky and always visible */
+  .processing {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    margin: 0;
+    padding: 1rem;
+    border-radius: 0;
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    animation: slideInFromTop 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .progress-container {
+    max-width: calc(100vw - 2rem);
+    margin: 0 auto;
+    gap: 0.75rem;
+  }
+
+  .progress-bar {
+    height: 0.375rem;
+  }
+
+  .progress-text {
+    font-size: 0.8rem;
+    flex-direction: column;
+    gap: 0.25rem;
+    text-align: center;
+  }
+
+  .progress-label {
+    color: var(--text-primary);
+  }
+
+  .progress-percentage {
+    font-size: 0.875rem;
+    font-weight: 700;
+  }
+
+  /* Add top padding to main content when processing to prevent overlap */
+  .main-content.processing-active {
+    padding-top: 7rem;
   }
 
   /* Touch-friendly buttons */

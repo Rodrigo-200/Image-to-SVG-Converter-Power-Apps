@@ -49,7 +49,7 @@
 [data-theme="dark"] {
   --primary-color: #4fc3f7;
   --primary-color-dark: #29b6f6;
-  --primary-color-light: #0f1419;
+  --primary-color-light: #81d4fa;
   
   --bg-primary: #1e1e1e;
   --bg-secondary: #2d2d30;
@@ -73,7 +73,7 @@
   :root:not([data-theme]) {
     --primary-color: #4fc3f7;
     --primary-color-dark: #29b6f6;
-    --primary-color-light: #0f1419;
+    --primary-color-light: #81d4fa;
     
     --bg-primary: #1e1e1e;
     --bg-secondary: #2d2d30;

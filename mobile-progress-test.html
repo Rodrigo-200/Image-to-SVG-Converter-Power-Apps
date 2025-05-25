@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Progress Bar Test - Image to SVG Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #0078d4;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .device-frame {
+            width: 375px;
+            height: 667px;
+            border: 8px solid #333;
+            border-radius: 25px;
+            margin: 20px auto;
+            overflow: hidden;
+            position: relative;
+            background: #000;
+        }
+
+        .device-screen {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #0078d4;
+        }
+
+        .test-button {
+            background: #0078d4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            transition: background 0.2s;
+        }
+
+        .test-button:hover {
+            background: #106ebe;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .checklist {
+            list-style: none;
+        }
+
+        .checklist li {
+            padding: 8px 0;
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .checklist li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .test-instructions {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .qr-section {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: #e9ecef;
+            border-radius: 8px;
+        }
+
+        #qrcode {
+            margin: 15px auto;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+</head>
+<body>
+    <div class="test-container">
+        <h1>📱 Mobile Progress Bar Test</h1>
+        
+        <div class="status success">
+            <strong>✅ Mobile Progress Bar Improvements Completed</strong><br>
+            The loading/progress bar has been optimized for mobile devices with the following enhancements:
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 Key Improvements Made</h3>
+            <ul class="checklist">
+                <li><strong>Sticky Positioning:</strong> Progress bar now sticks to the top of the viewport on mobile</li>
+                <li><strong>Always Visible:</strong> No more scrolling required to see conversion progress</li>
+                <li><strong>Smooth Animations:</strong> Enhanced with slide-in effects and shimmer animations</li>
+                <li><strong>Better Layout:</strong> Optimized text layout and spacing for mobile screens</li>
+                <li><strong>Enhanced Visuals:</strong> Gradient progress bar with animated shimmer effect</li>
+                <li><strong>Backdrop Blur:</strong> Modern glass effect with backdrop blur</li>
+                <li><strong>Auto Spacing:</strong> Main content automatically adjusts when progress bar appears</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>📋 Testing Instructions</h3>
+            <div class="test-instructions">
+                <strong>To test the mobile progress bar improvements:</strong>
+                <ol style="margin-left: 20px; margin-top: 10px;">
+                    <li>Open the app on your mobile device using the QR code below</li>
+                    <li>Upload an image using any input method (file upload, paste, or URL)</li>
+                    <li>Tap the "Convert to SVG" button</li>
+                    <li>Notice the progress bar appears at the top of the screen</li>
+                    <li>Try scrolling down - the progress bar should remain visible</li>
+                    <li>Observe the smooth animations and percentage updates</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="qr-section">
+            <h3>📱 Access on Mobile Device</h3>
+            <p>Scan this QR code with your mobile device to test:</p>
+            <div id="qrcode"></div>
+            <p><strong>Local URL:</strong> <span id="local-url">http://localhost:5173/</span></p>
+            <button class="test-button" onclick="generateQR()">🔄 Regenerate QR Code</button>
+        </div>
+
+        <div class="device-frame">
+            <iframe class="device-screen" src="http://localhost:5173/" title="Mobile Preview"></iframe>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Desktop Testing</h3>
+            <p>You can also test on desktop by:</p>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>Opening browser developer tools (F12)</li>
+                <li>Switching to mobile device simulation</li>
+                <li>Testing with different screen sizes (iPhone, Android, etc.)</li>
+                <li>Checking that the progress bar behavior changes appropriately</li>
+            </ul>
+            
+            <button class="test-button" onclick="openDesktopTest()">🖥️ Open in New Tab for Testing</button>
+        </div>
+
+        <div class="status info">
+            <strong>💡 Technical Details:</strong><br>
+            • Progress bar uses <code>position: fixed</code> on mobile (viewport width ≤ 768px)<br>
+            • Main content gets <code>padding-top: 7rem</code> when processing is active<br>
+            • Enhanced with CSS animations: slide-in effect and shimmer animation<br>
+            • Uses backdrop blur for modern glass effect<br>
+            • Responsive text sizing and layout optimizations
+        </div>
+    </div>
+
+    <script>
+        function generateQR() {
+            const url = document.getElementById('local-url').textContent;
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = '';
+            
+            QRCode.toCanvas(qrContainer, url, {
+                width: 200,
+                margin: 2,
+                color: {
+                    dark: '#0078d4',
+                    light: '#ffffff'
+                }
+            }, function (error) {
+                if (error) {
+                    console.error(error);
+                    qrContainer.innerHTML = '<p style="color: red;">Error generating QR code</p>';
+                }
+            });
+        }
+
+        function openDesktopTest() {
+            window.open('http://localhost:5173/', '_blank');
+        }
+
+        // Generate QR code on page load
+        window.addEventListener('load', generateQR);
+
+        // Auto-detect network URL if available
+        function detectNetworkUrl() {
+            // This would be populated if we had access to the actual network interface
+            // For now, we'll use the localhost URL
+            const localUrl = 'http://localhost:5173/';
+            document.getElementById('local-url').textContent = localUrl;
+        }
+
+        detectNetworkUrl();
+    </script>
+</body>
+</html>
