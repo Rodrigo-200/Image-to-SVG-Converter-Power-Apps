@@ -1,18 +1,15 @@
 <script setup>
 import { ref, reactive, computed, watch, onMounted } from 'vue'
-import ImageUpload from './components/ImageUpload.vue'
-import ClipboardPaste from './components/ClipboardPaste.vue'
-import UrlInput from './components/UrlInput.vue'
+import UnifiedImageInput from './components/UnifiedImageInput.vue'
 import PreviewArea from './components/PreviewArea.vue'
 import ControlsPanel from './components/ControlsPanel.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 import { useImageConversion } from './composables/useImageConversion.js'
-import { useClipboard } from './composables/useClipboard.js'
-import { Settings, Download, Palette, Maximize2, ChevronUp, ChevronDown, Minimize2 } from 'lucide-vue-next'
+import { Settings, Download, Palette, Maximize2, ChevronUp, ChevronDown, Minimize2, Sparkles } from 'lucide-vue-next'
 
 // Application state
 const currentImage = ref(null)
-const activeTab = ref('upload')
+const showWelcome = ref(true)
 
 const settings = reactive({
   removeBorder: true,
@@ -37,13 +34,6 @@ const {
   getCurrentBackendUrl,
   error: conversionError
 } = useImageConversion()
-
-const { setupGlobalPasteHandler } = useClipboard()
-
-// Setup global paste handler for clipboard functionality
-setupGlobalPasteHandler((imageFile) => {
-  handleImageSelected(imageFile)
-})
 
 // Computed properties
 const hasImage = computed(() => currentImage.value !== null)
@@ -73,8 +63,33 @@ watch(() => settings.svgColor, (newColor) => {
 // Methods
 const handleImageSelected = (imageFile) => {
   currentImage.value = imageFile
+  showWelcome.value = false
   // Start live preview immediately
   updateLivePreview(imageFile, settings)
+}
+
+const handleAppReset = () => {
+  // Reset all application state
+  currentImage.value = null
+  showWelcome.value = true
+  
+  // Clear SVG results
+  svgResult.value = ''
+  livePreviewSvg.value = ''
+  
+  // Reset settings to defaults
+  Object.assign(settings, {
+    removeBorder: true,
+    svgColor: '#000000',
+    backgroundColor: '#ffffff',
+    quality: 'medium',
+    size: 'auto'
+  })
+  
+  // Reset mobile UI state
+  mobileControlsExpanded.value = false
+  mobileActionBarCollapsed.value = true
+  mobilePreviewExpanded.value = true
 }
 
 const convertToSvg = async () => {
@@ -158,48 +173,13 @@ onMounted(() => {
 
     <!-- Main Content -->
     <main class="main-content" :class="{ 'processing-active': isProcessing }">
-      <div class="container">
-        <!-- Input Methods -->
+      <div class="container">        <!-- Input Methods -->
         <section class="input-section">
-          <div class="tabs">
-            <button 
-              class="tab" 
-              :class="{ active: activeTab === 'upload' }"
-              @click="activeTab = 'upload'"
-            >
-              Upload File
-            </button>
-            <button 
-              class="tab" 
-              :class="{ active: activeTab === 'clipboard' }"
-              @click="activeTab = 'clipboard'"
-            >
-              Paste from Clipboard
-            </button>
-            <button 
-              class="tab" 
-              :class="{ active: activeTab === 'url' }"
-              @click="activeTab = 'url'"
-            >
-              Image URL
-            </button>
-          </div>
-
-          <div class="tab-content">
-            <ImageUpload 
-              v-if="activeTab === 'upload'"
-              @image-selected="handleImageSelected"
-            />
-            <ClipboardPaste 
-              v-if="activeTab === 'clipboard'"
-              @image-selected="handleImageSelected"
-            />
-            <UrlInput 
-              v-if="activeTab === 'url'"
-              @image-selected="handleImageSelected"
-            />
-          </div>
-        </section>        <!-- Modern Loading Modal -->
+          <UnifiedImageInput 
+            @image-selected="handleImageSelected" 
+            @reset-app="handleAppReset"
+          />
+        </section><!-- Modern Loading Modal -->
         <div v-if="isProcessing" class="loading-overlay">
           <div class="loading-modal">
             <div class="loading-content">
@@ -387,26 +367,36 @@ onMounted(() => {
               </div>
             </div>
           </div>
-        </div>
-
-        <!-- Welcome Message -->
-        <div v-if="!hasImage" class="welcome">
+        </div>        <!-- Welcome Message -->
+        <div v-if="showWelcome && !hasImage" class="welcome">
           <div class="welcome-content">
-            <Maximize2 class="welcome-icon" />
-            <h2>Welcome to Image to SVG Converter</h2>
-            <p>Convert your images to SVG format optimized for Microsoft Power Apps. Choose an input method above to get started.</p>
+            <div class="welcome-icon-container">
+              <Sparkles class="welcome-icon primary" />
+              <Palette class="welcome-icon secondary" />
+            </div>
+            <h2>Transform Images to SVG</h2>
+            <p>Professional image to SVG conversion optimized for Microsoft Power Apps. Get started by choosing an input method above.</p>
             <div class="features">
               <div class="feature">
-                <Settings class="feature-icon" />
-                <span>Customizable Settings</span>
+                <Upload class="feature-icon" />
+                <div class="feature-content">
+                  <span class="feature-title">Multiple Input Methods</span>
+                  <span class="feature-desc">Upload, paste, or load from URL</span>
+                </div>
               </div>
               <div class="feature">
-                <Palette class="feature-icon" />
-                <span>Color Adjustments</span>
+                <Settings class="feature-icon" />
+                <div class="feature-content">
+                  <span class="feature-title">Customizable Options</span>
+                  <span class="feature-desc">Quality, colors, and optimization</span>
+                </div>
               </div>
               <div class="feature">
                 <Download class="feature-icon" />
-                <span>Instant Download</span>
+                <div class="feature-content">
+                  <span class="feature-title">Instant Download</span>
+                  <span class="feature-desc">Power Apps ready SVG files</span>
+                </div>
               </div>
             </div>
           </div>
@@ -542,30 +532,128 @@ onMounted(() => {
   margin-bottom: 2rem;
 }
 
-.tabs {
-  display: flex;
-  border-bottom: 1px solid var(--border-color);
-  margin-bottom: 1.5rem;
+.welcome {
+  padding: 4rem 2rem;
+  text-align: center;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-large);
+  border: 1px solid var(--border-color);
+  margin-top: 2rem;
+  animation: fadeInUp 0.8s ease-out;
 }
 
-.tab {
-  padding: 0.75rem 1.5rem;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-secondary);
-  font-weight: 500;
-  transition: all 0.2s ease;
-  border-bottom: 2px solid transparent;
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.tab:hover {
-  color: var(--text-primary);
+.welcome-content {
+  max-width: 600px;
+  margin: 0 auto;
 }
 
-.tab.active {
+.welcome-icon-container {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 2rem;
+}
+
+.welcome-icon {
+  width: 4rem;
+  height: 4rem;
+}
+
+.welcome-icon.primary {
   color: var(--primary-color);
-  border-bottom-color: var(--primary-color);
+  animation: float 3s ease-in-out infinite;
+}
+
+.welcome-icon.secondary {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  color: var(--success-color);
+  opacity: 0.7;
+  animation: float 3s ease-in-out infinite reverse;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.welcome h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0 0 1rem 0;
+  background: linear-gradient(135deg, var(--primary-color), var(--success-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.welcome p {
+  font-size: 1.125rem;
+  color: var(--text-secondary);
+  margin: 0 0 3rem 0;
+  line-height: 1.6;
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin-top: 3rem;
+}
+
+.feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  text-align: left;
+  padding: 1.5rem;
+  background: var(--bg-primary);
+  border-radius: var(--radius-medium);
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.feature:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-medium);
+  border-color: var(--primary-color);
+}
+
+.feature-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--primary-color);
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+}
+
+.feature-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.feature-title {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.feature-desc {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
 }
 
 .processing {
@@ -821,57 +909,12 @@ onMounted(() => {
   height: 1.25rem;
 }
 
-.welcome {
-  padding: 2rem 1rem;
-}
-
-.welcome-content {
-  max-width: 100%;
-}
-
-.welcome h2 {
-  font-size: 1.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.welcome p {
-  font-size: 1rem;
-  margin-bottom: 2rem;
-  line-height: 1.5;
-}
-
-.welcome-icon {
-  width: 3rem;
-  height: 3rem;
-  margin-bottom: 1rem;
-}
-
-.features {
-  display: flex;
-  justify-content: center;
-  gap: 2rem;
-  flex-wrap: wrap;
-}
-
-.feature {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--text-secondary);
-}
-
-.feature-icon {
-  width: 1.25rem;
-  height: 1.25rem;
-  color: var(--primary-color);
-}
-
 /* Mobile Action Bar - Hidden by default */
 .mobile-action-bar {
   display: none;
 }
 
-@media (max-width: 768px) {  .app {
+@media (max-width: 768px) {.app {
     min-height: 100vh;
     padding: 0;
     padding-bottom: 120px; /* Make room for mobile action bar */
@@ -1364,17 +1407,40 @@ onMounted(() => {
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  /* Mobile welcome section adjustments */
+  .welcome {
+    padding: 2rem 1rem;
+    margin-top: 1rem;
+  }
+
+  .welcome h2 {
+    font-size: 2rem;
+  }
+
+  .welcome p {
+    font-size: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .welcome-icon {
+    width: 3rem;
+    height: 3rem;
+  }
 
   .features {
-    flex-direction: column;
-    align-items: center;
+    grid-template-columns: 1fr;
     gap: 1rem;
-    padding: 1rem;
+    margin-top: 2rem;
   }
 
   .feature {
-    width: 100%;
-    max-width: 300px;
+    flex-direction: column;
+    text-align: center;
+    padding: 1rem;
+  }
+
+  .feature-content {
+    align-items: center;
     text-align: center;
   }
 

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { Link, Loader, AlertCircle, CheckCircle } from 'lucide-vue-next'
+import { Link, Loader, AlertCircle, CheckCircle, Sparkles } from 'lucide-vue-next'
 
 const emit = defineEmits(['image-selected'])
 
@@ -8,6 +8,8 @@ const imageUrl = ref('')
 const isLoading = ref(false)
 const error = ref('')
 const loadedImageFile = ref(null)
+const showSuccess = ref(false)
+const isAnimating = ref(false)
 
 const isValidUrl = computed(() => {
   try {
@@ -24,10 +26,10 @@ const canLoadImage = computed(() => {
 
 const loadImageFromUrl = async () => {
   if (!canLoadImage.value) return
-  
-  isLoading.value = true
+    isLoading.value = true
   error.value = ''
   loadedImageFile.value = null
+  isAnimating.value = true
   
   try {
     // Create a proxy to handle CORS issues
@@ -45,13 +47,18 @@ const loadImageFromUrl = async () => {
     if (!blob.type.startsWith('image/')) {
       throw new Error('The URL does not point to a valid image file')
     }
-    
-    // Create a File object from the blob
+      // Create a File object from the blob
     const fileName = getFileNameFromUrl(imageUrl.value) || 'image.jpg'
     const file = new File([blob], fileName, { type: blob.type })
     
     loadedImageFile.value = file
+    showSuccess.value = true
     emit('image-selected', file)
+    
+    // Hide success indicator after delay
+    setTimeout(() => {
+      showSuccess.value = false
+    }, 2000)
     
   } catch (err) {
     console.error('Error loading image:', err)
@@ -59,16 +66,22 @@ const loadImageFromUrl = async () => {
     
     // Fallback: try direct loading (will work if CORS allows)
     if (err.message.includes('CORS') || err.message.includes('allorigins')) {
-      try {
-        const directResponse = await fetch(imageUrl.value)
+      try {        const directResponse = await fetch(imageUrl.value)
         if (directResponse.ok) {
           const blob = await directResponse.blob()
           if (blob.type.startsWith('image/')) {
             const fileName = getFileNameFromUrl(imageUrl.value) || 'image.jpg'
             const file = new File([blob], fileName, { type: blob.type })
+            
             loadedImageFile.value = file
+            showSuccess.value = true
             emit('image-selected', file)
             error.value = ''
+            
+            // Hide success indicator after delay
+            setTimeout(() => {
+              showSuccess.value = false
+            }, 2000)
           }
         }
       } catch {
@@ -77,6 +90,7 @@ const loadImageFromUrl = async () => {
     }
   } finally {
     isLoading.value = false
+    isAnimating.value = false
   }
 }
 
@@ -129,15 +143,18 @@ const formatFileSize = (bytes) => {
 
 <template>
   <div class="url-input-container">
-    <div class="input-section">
-      <div class="input-group">
-        <div class="input-wrapper">
-          <Link class="input-icon" />
+    <div class="input-section">      <div class="input-group">
+        <div class="input-wrapper" :class="{ 'loading': isLoading, 'success': loadedImageFile }">
+          <div class="input-icon-container">
+            <Link class="input-icon" />
+            <Sparkles v-if="showSuccess" class="success-sparkles" />
+          </div>
           <input
             v-model="imageUrl"
             type="url"
             placeholder="Enter image URL (https://example.com/image.jpg)"
             class="url-input"
+            :class="{ 'animating': isAnimating }"
             @paste="handlePaste"
             @keydown.enter="loadImageFromUrl"
           />
@@ -150,30 +167,30 @@ const formatFileSize = (bytes) => {
             ×
           </button>
         </div>
-        
-        <button
+          <button
           @click="loadImageFromUrl"
           :disabled="!canLoadImage || isLoading"
           class="load-btn"
+          :class="{ 'loading': isLoading, 'success': loadedImageFile }"
           type="button"
         >
           <Loader v-if="isLoading" class="btn-icon animate-spin" />
+          <CheckCircle v-else-if="loadedImageFile" class="btn-icon success-icon" />
           <span v-else>Load Image</span>
         </button>
       </div>
-      
-      <div class="url-validation">
-        <div v-if="imageUrl && !isValidUrl" class="validation-message error">
+        <div class="url-validation">
+        <div v-if="imageUrl && !isValidUrl" class="validation-message error slide-in">
           <AlertCircle class="validation-icon" />
           Please enter a valid URL starting with http:// or https://
         </div>
         
-        <div v-if="error" class="validation-message error">
+        <div v-if="error" class="validation-message error slide-in">
           <AlertCircle class="validation-icon" />
           {{ error }}
         </div>
         
-        <div v-if="loadedImageFile" class="validation-message success">
+        <div v-if="loadedImageFile" class="validation-message success slide-in">
           <CheckCircle class="validation-icon" />
           Image loaded successfully ({{ formatFileSize(loadedImageFile.size) }})
         </div>
@@ -254,15 +271,78 @@ export default {
   position: relative;
   display: flex;
   align-items: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.input-icon {
+.input-wrapper.loading {
+  transform: scale(1.01);
+}
+
+.input-wrapper.success {
+  animation: successPulse 0.6s ease-out;
+}
+
+@keyframes successPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+}
+
+.input-icon-container {
   position: absolute;
   left: 0.75rem;
   width: 1.25rem;
   height: 1.25rem;
-  color: var(--text-secondary);
   z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.input-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--text-secondary);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.input-wrapper.loading .input-icon {
+  color: var(--primary-color);
+  transform: scale(1.1);
+}
+
+.success-sparkles {
+  position: absolute;
+  top: -0.25rem;
+  right: -0.25rem;
+  width: 1rem;
+  height: 1rem;
+  color: var(--success-color);
+  animation: sparkle 1.5s ease-out;
+}
+
+@keyframes sparkle {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2) rotate(180deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(360deg);
+    opacity: 0;
+  }
 }
 
 .url-input {
@@ -273,11 +353,17 @@ export default {
   font-size: 0.875rem;
   background: var(--bg-primary);
   color: var(--text-primary);
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .url-input:focus {
   outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-color-light);
+  transform: translateY(-1px);
+}
+
+.url-input.animating {
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px var(--primary-color-light);
 }
@@ -312,22 +398,69 @@ export default {
   border-radius: var(--radius-medium);
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .load-btn:hover:not(:disabled) {
   background: var(--primary-color-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .load-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
+}
+
+.load-btn.loading {
+  background: var(--primary-color-dark);
+  transform: scale(0.98);
+}
+
+.load-btn.success {
+  background: var(--success-color);
+  animation: successBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes successBounce {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .btn-icon {
   width: 1rem;
   height: 1rem;
+}
+
+.btn-icon.success-icon {
+  animation: iconSuccess 0.5s ease-out;
+}
+
+@keyframes iconSuccess {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .url-validation {
@@ -341,6 +474,14 @@ export default {
   font-size: 0.875rem;
   padding: 0.5rem;
   border-radius: var(--radius-small);
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.validation-message.slide-in {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .validation-message.error {

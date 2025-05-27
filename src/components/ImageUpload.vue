@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch, onBeforeUnmount } from 'vue'
-import { Upload, FileImage, X } from 'lucide-vue-next'
+import { Upload, FileImage, X, Sparkles } from 'lucide-vue-next'
 
 const emit = defineEmits(['image-selected'])
 
@@ -8,6 +8,8 @@ const dragActive = ref(false)
 const fileInput = ref(null)
 const selectedFile = ref(null)
 const previewUrl = ref(null)
+const isAnimating = ref(false)
+const showSuccess = ref(false)
 
 const acceptedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp']
 
@@ -26,6 +28,11 @@ watch(selectedFile, (newFile, oldFile) => {
   // Create new URL if we have a file
   if (newFile) {
     previewUrl.value = URL.createObjectURL(newFile)
+    // Trigger success animation
+    showSuccess.value = true
+    setTimeout(() => {
+      showSuccess.value = false
+    }, 1500)
   }
 }, { immediate: true })
 
@@ -38,8 +45,12 @@ onBeforeUnmount(() => {
 
 const handleFileSelect = (file) => {
   if (isValidFile(file)) {
-    selectedFile.value = file
-    emit('image-selected', file)
+    isAnimating.value = true
+    setTimeout(() => {
+      selectedFile.value = file
+      emit('image-selected', file)
+      isAnimating.value = false
+    }, 300)
   } else {
     alert('Please select a valid image file (JPG, PNG, GIF, WEBP, BMP)')
   }
@@ -112,16 +123,19 @@ const formatFileSize = (bytes) => {
         @change="handleFileInputChange"
         class="file-input"
       />
-      
-      <div v-if="!selectedFile" class="upload-content">
-        <Upload class="upload-icon" />
+        <div v-if="!selectedFile" class="upload-content">
+        <div class="upload-icon-container" :class="{ 'animating': isAnimating }">
+          <Upload class="upload-icon" />
+          <Sparkles v-if="showSuccess" class="success-sparkles" />
+        </div>
         <h3>Drag & drop your image here</h3>
         <p>or <span class="link-text">click to browse</span></p>
         <div class="supported-formats">
           <small>Supported formats: JPG, PNG, GIF, WEBP, BMP</small>
         </div>
-      </div>      <div v-else class="file-selected">
-        <div class="selected-info">
+      </div>
+      
+      <div v-else class="file-selected" :class="{ 'slide-in': selectedFile }">        <div class="selected-info" :class="{ 'fade-in': selectedFile }">
           <FileImage class="file-icon" />
           <div class="file-details">
             <div class="file-name">{{ selectedFile.name }}</div>
@@ -164,6 +178,17 @@ const formatFileSize = (bytes) => {
 .drop-zone:hover {
   border-color: var(--primary-color);
   background: var(--primary-color-light);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+}
+
+.drop-zone:hover .upload-icon {
+  transform: scale(1.1);
+  color: var(--primary-color);
+}
+
+.drop-zone:hover .upload-content h3 {
+  color: var(--primary-color);
 }
 
 .drop-zone.drag-active {
@@ -176,6 +201,22 @@ const formatFileSize = (bytes) => {
   border-style: solid;
   border-color: var(--success-color);
   background: var(--bg-secondary);
+  animation: successPulse 0.6s ease-out;
+}
+
+@keyframes successPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
 }
 
 .file-input {
@@ -191,11 +232,46 @@ const formatFileSize = (bytes) => {
   gap: 1rem;
 }
 
+.upload-icon-container {
+  position: relative;
+  margin-bottom: 0.5rem;
+}
+
 .upload-icon {
   width: 3rem;
   height: 3rem;
   color: var(--text-secondary);
-  margin-bottom: 0.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.upload-icon-container.animating .upload-icon {
+  transform: scale(1.1);
+  color: var(--primary-color);
+}
+
+.success-sparkles {
+  position: absolute;
+  top: -0.25rem;
+  right: -0.25rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--success-color);
+  animation: sparkle 1.5s ease-out;
+}
+
+@keyframes sparkle {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2) rotate(180deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(360deg);
+    opacity: 0;
+  }
 }
 
 .upload-content h3 {
@@ -228,6 +304,14 @@ const formatFileSize = (bytes) => {
   background: var(--bg-primary);
   border-radius: var(--radius-medium);
   border: 1px solid var(--success-color);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.file-selected.slide-in {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .selected-info {
@@ -235,6 +319,14 @@ const formatFileSize = (bytes) => {
   align-items: center;
   gap: 0.75rem;
   flex: 1;
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.1s;
+}
+
+.selected-info.fade-in {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 .file-details {
@@ -268,10 +360,19 @@ const formatFileSize = (bytes) => {
   display: flex;
   align-items: center;
   justify-content: center;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.2s;
+}
+
+.file-selected.slide-in .clear-btn {
+  opacity: 1;
+  transform: scale(1);
 }
 
 .clear-btn:hover {
   background: #b91c1c;
+  transform: scale(1.05);
 }
 
 .clear-icon {
