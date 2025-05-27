@@ -5,7 +5,7 @@ import PreviewArea from './components/PreviewArea.vue'
 import ControlsPanel from './components/ControlsPanel.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 import { useImageConversion } from './composables/useImageConversion.js'
-import { Settings, Download, Palette, Maximize2, ChevronUp, ChevronDown, Minimize2, Sparkles } from 'lucide-vue-next'
+import { Settings, Download, Palette, Maximize2, ChevronUp, ChevronDown, Minimize2, Sparkles, Image, RefreshCw, FileCode, Zap, Grid3X3, Layers, Smartphone, Sparkle, Box, Wifi, WifiOff, Globe } from 'lucide-vue-next'
 
 // Application state
 const currentImage = ref(null)
@@ -143,36 +143,111 @@ onMounted(() => {
 })
 </script>
 
-<template>
-  <div class="app">
+<template>  <div class="app">
     <!-- Header -->
     <header class="header">
       <div class="header-content">
         <div class="logo">
-          <Palette class="logo-icon" />
-          <h1>Image to SVG Converter</h1>
-          <span class="subtitle">Optimized for Power Apps</span>
+          <div class="logo-icon-container">
+            <Palette class="logo-icon" />
+            <Sparkles class="logo-sparkle" />
+          </div>
+          <div class="logo-text">
+            <h1>Image to SVG Converter</h1>
+            <span class="subtitle">Optimized for Power Apps</span>
+          </div>
         </div>
         <div class="header-controls">          <!-- Backend Status Indicator -->
           <div class="backend-status" :class="{ connected: isBackendConnected, disconnected: !isBackendConnected }">
-            <div class="status-dot"></div>
-            <span class="status-text">
-              {{ isBackendConnected ? 'Backend Connected' : 'Frontend Only' }}
-            </span>
-            <span v-if="!isBackendConnected" class="status-subtitle">
-              Live preview available
-            </span>
-            <span v-if="isBackendConnected" class="status-subtitle">
-              {{ getCurrentBackendUrl() }}
-            </span>
+            <component 
+              :is="isBackendConnected ? Wifi : WifiOff" 
+              class="status-icon" 
+            />
+            <div class="status-content">
+              <span class="status-text">
+                {{ isBackendConnected ? 'Backend Connected' : 'Frontend Only' }}
+              </span>
+              <span v-if="!isBackendConnected" class="status-subtitle">
+                Live preview available
+              </span>
+              <span v-if="isBackendConnected" class="status-subtitle">
+                {{ getCurrentBackendUrl() }}
+              </span>
+            </div>
           </div>
           <ThemeToggle />
         </div>
       </div>
     </header>
 
+    <!-- Welcome Hero Section -->
+    <section v-if="!hasImage" class="welcome-hero">
+      <div class="hero-content">
+        <div class="hero-text">
+          <h2 class="hero-title">
+            Convert Images to 
+            <span class="gradient-text">SVG</span>
+          </h2>
+          <p class="hero-description">
+            Transform your images into scalable vector graphics, perfectly optimized for Microsoft Power Apps. 
+            Support for multiple formats with professional-grade conversion.
+          </p>
+          <div class="hero-features">
+            <div class="feature-item">
+              <div class="feature-icon">✨</div>
+              <span>High-Quality Conversion</span>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon">🎨</div>
+              <span>Color Customization</span>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon">📱</div>
+              <span>Power Apps Ready</span>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon">⚡</div>
+              <span>Instant Preview</span>
+            </div>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <div class="visual-container">            <div class="floating-card card-1">
+              <div class="card-content">
+                <Image class="card-icon-svg" />
+                <div class="card-text">
+                  <span class="card-title">Input Images</span>
+                  <span class="card-subtitle">JPG, PNG, GIF</span>
+                </div>
+              </div>
+            </div>
+            <div class="floating-card card-2">
+              <div class="card-content">
+                <Zap class="card-icon-svg" />
+                <div class="card-text">
+                  <span class="card-title">Convert</span>
+                  <span class="card-subtitle">AI Processing</span>
+                </div>
+              </div>
+            </div>
+            <div class="floating-card card-3">
+              <div class="card-content">
+                <Box class="card-icon-svg" />
+                <div class="card-text">
+                  <span class="card-title">Power Apps</span>
+                  <span class="card-subtitle">Ready SVG</span>
+                </div>
+              </div>
+            </div>
+            <div class="connection-line line-1"></div>
+            <div class="connection-line line-2"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Main Content -->
-    <main class="main-content" :class="{ 'processing-active': isProcessing }">
+    <main class="main-content" :class="{ 'processing-active': isProcessing, 'welcome-mode': !hasImage }">
       <div class="container">        <!-- Input Methods -->
         <section class="input-section">
           <UnifiedImageInput 
@@ -367,39 +442,6 @@ onMounted(() => {
               </div>
             </div>
           </div>
-        </div>        <!-- Welcome Message -->
-        <div v-if="showWelcome && !hasImage" class="welcome">
-          <div class="welcome-content">
-            <div class="welcome-icon-container">
-              <Sparkles class="welcome-icon primary" />
-              <Palette class="welcome-icon secondary" />
-            </div>
-            <h2>Transform Images to SVG</h2>
-            <p>Professional image to SVG conversion optimized for Microsoft Power Apps. Get started by choosing an input method above.</p>
-            <div class="features">
-              <div class="feature">
-                <Upload class="feature-icon" />
-                <div class="feature-content">
-                  <span class="feature-title">Multiple Input Methods</span>
-                  <span class="feature-desc">Upload, paste, or load from URL</span>
-                </div>
-              </div>
-              <div class="feature">
-                <Settings class="feature-icon" />
-                <div class="feature-content">
-                  <span class="feature-title">Customizable Options</span>
-                  <span class="feature-desc">Quality, colors, and optimization</span>
-                </div>
-              </div>
-              <div class="feature">
-                <Download class="feature-icon" />
-                <div class="feature-content">
-                  <span class="feature-title">Instant Download</span>
-                  <span class="feature-desc">Power Apps ready SVG files</span>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </main>
@@ -432,19 +474,59 @@ onMounted(() => {
 .logo {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
+}
+
+.logo-icon-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .logo-icon {
-  width: 2rem;
-  height: 2rem;
+  width: 2.5rem;
+  height: 2.5rem;
   color: var(--primary-color);
+  transition: all 0.3s ease;
+}
+
+.logo-sparkle {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 1rem;
+  height: 1rem;
+  color: var(--accent-color, #fbbf24);
+  animation: sparkleRotate 3s ease-in-out infinite;
+  opacity: 0.8;
+}
+
+@keyframes sparkleRotate {
+  0%, 100% { transform: rotate(0deg) scale(1); opacity: 0.6; }
+  50% { transform: rotate(180deg) scale(1.1); opacity: 1; }
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
 }
 
 .logo h1 {
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: 700;
   margin: 0;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-color-dark));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin-top: 0.125rem;
 }
 
 .header-controls {
@@ -456,55 +538,65 @@ onMounted(() => {
 .backend-status {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
   padding: 0.5rem 0.75rem;
   border-radius: 0.375rem;
   font-size: 0.875rem;
   font-weight: 500;
   transition: all 0.2s ease;
+  border: 1px solid transparent;
 }
 
 .backend-status.connected {
   background: rgba(34, 197, 94, 0.1);
   color: rgb(34, 197, 94);
+  border-color: rgba(34, 197, 94, 0.2);
 }
 
 .backend-status.disconnected {
   background: rgba(156, 163, 175, 0.1);
   color: rgb(107, 114, 128);
+  border-color: rgba(156, 163, 175, 0.2);
+}
+
+.status-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.backend-status.connected .status-icon {
+  animation: pulse-icon 2s ease-in-out infinite;
+}
+
+.status-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
 }
 
 .status-text {
   font-weight: 500;
+  line-height: 1.2;
 }
 
 .status-subtitle {
   font-size: 0.75rem;
   opacity: 0.8;
-  margin-left: 0.25rem;
+  margin-left: 0;
+  line-height: 1.1;
 }
 
-.status-dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: currentColor;
-  animation: pulse 2s infinite;
-}
-
-.retry-btn {
-  padding: 0.25rem 0.5rem;
-  background: rgba(239, 68, 68, 0.2);
-  color: rgb(239, 68, 68);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: 0.25rem;
-  font-size: 0.75rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.retry-btn:hover {
-  background: rgba(239, 68, 68, 0.3);
+@keyframes pulse-icon {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
 }
 
 @keyframes pulse {
@@ -512,14 +604,288 @@ onMounted(() => {
   50% { opacity: 0.5; }
 }
 
-.subtitle {
-  font-size: 0.875rem;
+/* Welcome Hero Section */
+.welcome-hero {
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  padding: 4rem 0 3rem;
+  margin-bottom: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.welcome-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 30% 20%, rgba(var(--primary-rgb), 0.05) 0%, transparent 50%),
+              radial-gradient(circle at 80% 80%, rgba(var(--primary-rgb), 0.03) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.hero-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.hero-title {
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1.1;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-color-dark));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  position: relative;
+}
+
+.hero-description {
+  font-size: 1.25rem;
+  line-height: 1.6;
   color: var(--text-secondary);
-  margin-left: 0.5rem;
+  margin: 0;
+  max-width: 540px;
+}
+
+.hero-features {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-medium);
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.feature-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+  border-color: var(--primary-color);
+}
+
+.feature-icon {
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-color-dark));
+  border-radius: 50%;
+  color: white;
+  font-size: 1rem;
+}
+
+.hero-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  height: 400px;
+}
+
+.visual-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.floating-card {
+  position: absolute;
+  background: var(--bg-primary);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-large);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-large);
+  transition: all 0.3s ease;
+  animation: float 6s ease-in-out infinite;
+  z-index: 10;
+}
+
+.floating-card:hover {
+  transform: scale(1.05) translateY(-10px);
+  box-shadow: var(--shadow-xl);
+  border-color: var(--primary-color);
+  z-index: 20;
+}
+
+.card-1 {
+  top: 20%;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.card-2 {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: float-center 6s ease-in-out infinite;
+  animation-delay: 2s;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-color-dark));
+  color: white;
+  border-color: var(--primary-color);
+  z-index: 15;
+}
+
+.card-2:hover {
+  z-index: 25;
+}
+
+.card-3 {
+  bottom: 20%;
+  right: 10%;
+  animation-delay: 4s;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 120px;
+}
+
+.card-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  text-align: center;
+}
+
+.card-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: inherit;
+  line-height: 1.2;
+}
+
+.card-subtitle {
+  font-size: 0.75rem;
+  font-weight: 500;
+  opacity: 0.8;
+  color: inherit;
+  line-height: 1.1;
+}
+
+.card-icon-svg {
+  width: 2rem;
+  height: 2rem;
+  margin-bottom: 0.5rem;
+  stroke-width: 1.5;
+  transition: all 0.3s ease;
+}
+
+/* Icon-specific animations */
+.card-1 .card-icon-svg {
+  animation: iconPulse 4s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+.card-2 .card-icon-svg {
+  animation: iconSpark 3s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+.card-3 .card-icon-svg {
+  animation: iconGlow 5s ease-in-out infinite;
+  animation-delay: 1.5s;
+}
+
+@keyframes iconPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes iconSpark {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.05); filter: brightness(1.2); }
+}
+
+@keyframes iconGlow {
+  0%, 100% { filter: brightness(1) hue-rotate(0deg); }
+  50% { filter: brightness(1.1) hue-rotate(10deg); }
+}
+
+.connection-line {
+  position: absolute;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary-color), transparent);
+  opacity: 0.6;
+  animation: pulse-line 3s ease-in-out infinite;
+}
+
+.line-1 {
+  top: 35%;
+  left: 25%;
+  width: 25%;
+  transform: rotate(25deg);
+  animation-delay: 1s;
+}
+
+.line-2 {
+  bottom: 35%;
+  left: 45%;
+  width: 25%;
+  transform: rotate(-25deg);
+  animation-delay: 3s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-15px) rotate(1deg); }
+  66% { transform: translateY(-5px) rotate(-1deg); }
+}
+
+@keyframes float-center {
+  0%, 100% { transform: translate(-50%, -50%) translateY(0px) rotate(0deg); }
+  33% { transform: translate(-50%, -50%) translateY(-15px) rotate(1deg); }
+  66% { transform: translate(-50%, -50%) translateY(-5px) rotate(-1deg); }
+}
+
+@keyframes pulse-line {
+  0%, 100% { opacity: 0.3; transform: scaleX(0.8); }
+  50% { opacity: 0.8; transform: scaleX(1.2); }
 }
 
 .main-content {
   padding: 2rem 0;
+}
+
+.main-content.welcome-mode {
+  padding: 1rem 0 2rem;
 }
 
 .container {
@@ -532,129 +898,7 @@ onMounted(() => {
   margin-bottom: 2rem;
 }
 
-.welcome {
-  padding: 4rem 2rem;
-  text-align: center;
-  background: var(--bg-secondary);
-  border-radius: var(--radius-large);
-  border: 1px solid var(--border-color);
-  margin-top: 2rem;
-  animation: fadeInUp 0.8s ease-out;
-}
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.welcome-content {
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.welcome-icon-container {
-  position: relative;
-  display: inline-block;
-  margin-bottom: 2rem;
-}
-
-.welcome-icon {
-  width: 4rem;
-  height: 4rem;
-}
-
-.welcome-icon.primary {
-  color: var(--primary-color);
-  animation: float 3s ease-in-out infinite;
-}
-
-.welcome-icon.secondary {
-  position: absolute;
-  top: 0.5rem;
-  left: 0.5rem;
-  color: var(--success-color);
-  opacity: 0.7;
-  animation: float 3s ease-in-out infinite reverse;
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-}
-
-.welcome h2 {
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin: 0 0 1rem 0;
-  background: linear-gradient(135deg, var(--primary-color), var(--success-color));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.welcome p {
-  font-size: 1.125rem;
-  color: var(--text-secondary);
-  margin: 0 0 3rem 0;
-  line-height: 1.6;
-}
-
-.features {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 2rem;
-  margin-top: 3rem;
-}
-
-.feature {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  text-align: left;
-  padding: 1.5rem;
-  background: var(--bg-primary);
-  border-radius: var(--radius-medium);
-  border: 1px solid var(--border-color);
-  transition: all 0.3s ease;
-}
-
-.feature:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-medium);
-  border-color: var(--primary-color);
-}
-
-.feature-icon {
-  width: 1.5rem;
-  height: 1.5rem;
-  color: var(--primary-color);
-  flex-shrink: 0;
-  margin-top: 0.25rem;
-}
-
-.feature-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.feature-title {
-  font-weight: 600;
-  color: var(--text-primary);
-  font-size: 1rem;
-}
-
-.feature-desc {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  line-height: 1.4;
-}
 
 .processing {
   text-align: center;
@@ -952,14 +1196,24 @@ onMounted(() => {
     justify-content: space-between;
     gap: 0.5rem;
   }
-
   .backend-status {
     font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
+    padding: 0.375rem 0.5rem;
+    gap: 0.5rem;
+  }
+
+  .status-icon {
+    width: 0.875rem;
+    height: 0.875rem;
   }
 
   .status-text {
     display: none;
+  }
+
+  .status-subtitle {
+    font-size: 0.625rem;
+    line-height: 1;
   }
 
   .main-content {
@@ -1405,44 +1659,7 @@ onMounted(() => {
     font-size: 0.875rem;
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  /* Mobile welcome section adjustments */
-  .welcome {
-    padding: 2rem 1rem;
-    margin-top: 1rem;
-  }
-
-  .welcome h2 {
-    font-size: 2rem;
-  }
-
-  .welcome p {
-    font-size: 1rem;
-    margin-bottom: 2rem;
-  }
-
-  .welcome-icon {
-    width: 3rem;
-    height: 3rem;
-  }
-
-  .features {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-    margin-top: 2rem;
-  }
-
-  .feature {
-    flex-direction: column;
-    text-align: center;
-    padding: 1rem;
-  }
-
-  .feature-content {
-    align-items: center;
-    text-align: center;
-  }
+    text-overflow: ellipsis;  }
 
   /* Mobile processing indicator - sticky and always visible */
   .processing {
@@ -1818,6 +2035,156 @@ onMounted(() => {
 
 .mobile-action-bar.collapsed .action-bar-handle {
   border-bottom: none;
+}
+
+/* Responsive Design for Hero Section */
+@media (max-width: 1024px) {
+  .hero-content {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    text-align: center;
+  }
+  
+  .hero-title {
+    font-size: 3rem;
+  }
+  
+  .hero-visual {
+    height: 300px;
+    order: -1;
+  }
+  
+  .hero-features {
+    max-width: 600px;
+    margin: 1rem auto 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .welcome-hero {
+    padding: 3rem 0 2rem;
+  }
+  
+  .hero-title {
+    font-size: 2.5rem;
+  }
+  
+  .hero-description {
+    font-size: 1.125rem;
+  }
+  
+  .hero-features {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    max-width: 400px;
+  }
+  
+  .feature-item {
+    padding: 0.75rem;
+  }
+  
+  .hero-visual {
+    height: 250px;
+  }
+  
+  .floating-card {
+    padding: 1rem;
+  }
+  
+  .card-content {
+    min-width: 80px;
+  }
+    .card-icon-svg {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+  
+  /* Improved header responsive design */
+  .header-content {
+    padding: 0 1rem;
+  }
+  
+  .logo h1 {
+    font-size: 1.25rem;
+  }
+  
+  .logo-icon {
+    width: 2rem;
+    height: 2rem;
+  }
+  
+  .logo-sparkle {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+  
+  .subtitle {
+    font-size: 0.75rem;
+  }
+    .backend-status {
+    flex-direction: row;
+    gap: 0.5rem;
+    padding: 0.375rem 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .status-icon {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+
+  .status-content {
+    gap: 0.125rem;
+  }
+  
+  .status-subtitle {
+    font-size: 0.625rem;
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-title {
+    font-size: 2rem;
+  }
+  
+  .hero-description {
+    font-size: 1rem;
+  }
+  
+  .hero-visual {
+    height: 200px;
+  }
+  
+  .floating-card {
+    padding: 0.75rem;
+  }
+  
+  .card-1, .card-3 {
+    display: none; /* Hide side cards on very small screens */
+  }
+  
+  .card-2 {
+    position: static;
+    transform: none;
+    margin: 0 auto;
+  }
+  
+  .connection-line {
+    display: none;
+  }
+  
+  .logo {
+    gap: 0.5rem;
+  }
+  
+  .logo-text {
+    gap: 0.125rem;
+  }
+  
+  .header-controls {
+    gap: 0.5rem;
+  }
 }
 }
 </style>

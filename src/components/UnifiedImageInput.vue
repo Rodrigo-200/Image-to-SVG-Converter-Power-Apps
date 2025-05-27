@@ -10,7 +10,7 @@ const dragActive = ref(false)
 const selectedFile = ref(null)
 const previewUrl = ref(null)
 const isAnimating = ref(false)
-const showSuccess = ref(false)
+const showSuccessAnimation = ref(false)
 
 // File upload state
 const fileInput = ref(null)
@@ -61,10 +61,9 @@ watch(selectedFile, (newFile, oldFile) => {
     URL.revokeObjectURL(previewUrl.value)
     previewUrl.value = null
   }
-  
-  if (newFile) {
+    if (newFile) {
     previewUrl.value = URL.createObjectURL(newFile)
-    showSuccessAnimation()
+    showSuccessAnimationEffect()
   }
 }, { immediate: true })
 
@@ -76,10 +75,10 @@ onBeforeUnmount(() => {
 })
 
 // Success animation
-const showSuccessAnimation = () => {
-  showSuccess.value = true
+const showSuccessAnimationEffect = () => {
+  showSuccessAnimation.value = true
   setTimeout(() => {
-    showSuccess.value = false
+    showSuccessAnimation.value = false
   }, 1500)
 }
 
@@ -153,14 +152,15 @@ const loadImageFromUrl = async () => {
     if (!blob.type.startsWith('image/')) {
       throw new Error('The URL does not point to a valid image file')
     }
-    
-    const fileName = getFileNameFromUrl(imageUrl.value) || 'image.jpg'
+      const fileName = getFileNameFromUrl(imageUrl.value) || 'image.jpg'
     const file = new File([blob], fileName, { type: blob.type })
     
     handleFileSelect(file)
+    displaySuccess(`Successfully loaded image from URL!`)
     
   } catch (error) {
     urlError.value = error.message
+    displayError(`Failed to load image: ${error.message}`)
   } finally {
     isUrlLoading.value = false
     isAnimating.value = false
@@ -172,18 +172,30 @@ const handleUrlPaste = async (e) => {
   try {
     const pastedText = e.clipboardData?.getData('text') || ''
     if (pastedText.trim()) {
-      // Let the normal paste happen first, then validate
+      // Prevent default paste to handle it manually
+      e.preventDefault()
+      
+      // Set the URL value manually
+      imageUrl.value = pastedText.trim()
+      
+      // Check if it's a valid URL after setting
       setTimeout(() => {
-        if (isValidUrl.value) {
-          // Show auto-loading indicator
-          isAutoLoading.value = true
-          setTimeout(() => {
-            isAutoLoading.value = false
-            // Auto-load if it's a valid URL
-            loadImageFromUrl()
-          }, 800) // Brief delay to show the indicator
+        try {
+          const url = new URL(pastedText.trim())
+          if (url.protocol === 'http:' || url.protocol === 'https:') {
+            // Show auto-loading indicator
+            isAutoLoading.value = true
+            setTimeout(() => {
+              isAutoLoading.value = false
+              // Auto-load the valid URL
+              loadImageFromUrl()
+            }, 500) // Brief delay to show the indicator
+          }
+        } catch (urlError) {
+          // Invalid URL, just set it without auto-loading
+          console.log('Pasted text is not a valid URL:', urlError.message)
         }
-      }, 100)
+      }, 50)
     }
   } catch (error) {
     console.warn('Error handling URL paste:', error)
@@ -268,6 +280,9 @@ const formatFileSize = (bytes) => {
 // Error handling state
 const errorMessage = ref('')
 const showError = ref(false)
+const successMessage = ref('')
+const showSuccessToast = ref(false)
+// showSuccessAnimation is already declared above in the state management section
 
 const displayError = (message) => {
   errorMessage.value = message
@@ -275,6 +290,14 @@ const displayError = (message) => {
   setTimeout(() => {
     showError.value = false
   }, 4000)
+}
+
+const displaySuccess = (message) => {
+  successMessage.value = message
+  showSuccessToast.value = true
+  setTimeout(() => {
+    showSuccessToast.value = false
+  }, 3000)
 }
 
 const switchMethod = (method) => {
@@ -295,7 +318,14 @@ const resetEverything = () => {
         <AlertCircle class="error-toast-icon" />
         <span>{{ errorMessage }}</span>
       </div>
-    </Transition>    <!-- Method Selector -->
+    </Transition>
+      <!-- Success Toast -->
+    <Transition name="success-toast">
+      <div v-if="showSuccessToast" class="success-toast">
+        <CheckCircle class="success-toast-icon" />
+        <span>{{ successMessage }}</span>
+      </div>
+    </Transition><!-- Method Selector -->
     <div class="method-selector">
       <div class="method-tabs">
         <button
@@ -352,10 +382,9 @@ const resetEverything = () => {
             class="file-input"
           />
           
-          <div class="upload-content">
-            <div class="upload-icon-container" :class="{ 'animating': isAnimating }">
+          <div class="upload-content">            <div class="upload-icon-container" :class="{ 'animating': isAnimating }">
               <Upload class="upload-icon" />
-              <Sparkles v-if="showSuccess" class="success-sparkles" />
+              <Sparkles v-if="showSuccessAnimation" class="success-sparkles" />
             </div>
             <h3>Drop your image here</h3>
             <p>or <span class="link-text">click to browse</span></p>
@@ -371,10 +400,9 @@ const resetEverything = () => {
           class="clipboard-zone"
           :class="{ 'animating': isAnimating }"
         >
-          <div class="clipboard-content">
-            <div class="clipboard-icon-container" :class="{ 'animating': isAnimating }">
+          <div class="clipboard-content">            <div class="clipboard-icon-container" :class="{ 'animating': isAnimating }">
               <Clipboard class="clipboard-icon" />
-              <Sparkles v-if="showSuccess" class="success-sparkles" />
+              <Sparkles v-if="showSuccessAnimation" class="success-sparkles" />
             </div>
             <h3>Press Ctrl+V to paste</h3>
             <p>Copy an image to your clipboard first</p>
@@ -387,18 +415,17 @@ const resetEverything = () => {
           v-else-if="activeMethod === 'url'"
           class="url-zone"
           :class="{ 'animating': isAnimating, 'loading': isUrlLoading }"
-        >
-          <div class="url-content">
+        >          <div class="url-content">
             <div class="url-icon-container" :class="{ 'animating': isAnimating }">
               <Link v-if="!isUrlLoading" class="url-icon" />
               <Loader v-else class="url-icon loading" />
-              <Sparkles v-if="showSuccess" class="success-sparkles" />
+              <Sparkles v-if="showSuccessAnimation" class="success-sparkles" />
             </div>
-            <h3>{{ isUrlLoading ? 'Loading image...' : 'Enter image URL' }}</h3>            <div class="url-input-group">
+            <h3>{{ isUrlLoading ? 'Loading image...' : 'Enter image URL' }}</h3><div class="url-input-group">
               <input
                 v-model="imageUrl"
                 type="url"
-                placeholder="https://example.com/image.jpg or paste with Ctrl+V"
+                placeholder="https://example.com/image.jpg • Paste URL with Ctrl+V"
                 class="url-input"
                 :disabled="isUrlLoading"
                 @keyup.enter="loadImageFromUrl"
@@ -408,6 +435,7 @@ const resetEverything = () => {
                 class="load-url-btn"
                 :disabled="!canLoadUrl || isUrlLoading"
                 @click="loadImageFromUrl"
+                :title="isUrlLoading ? 'Loading...' : 'Load image from URL'"
               >
                 <Loader v-if="isUrlLoading" class="btn-icon loading" />
                 <CheckCircle v-else class="btn-icon" />
@@ -504,6 +532,45 @@ const resetEverything = () => {
 }
 
 .error-toast-leave-to {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+/* Success Toast */
+.success-toast {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  background: var(--success-color);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius-medium);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: var(--shadow-large);
+  z-index: 1000;
+  max-width: 400px;
+  font-size: 0.9rem;
+}
+
+.success-toast-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
+.success-toast-enter-active,
+.success-toast-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.success-toast-enter-from {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.success-toast-leave-to {
   opacity: 0;
   transform: translateX(100%);
 }
@@ -864,6 +931,12 @@ const resetEverything = () => {
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+}
+
+.url-input:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background: var(--bg-secondary);
 }
 
 .load-url-btn {
