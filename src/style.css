@@ -28,8 +28,8 @@
   --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.1);
   --shadow-medium: 0 4px 8px rgba(0, 0, 0, 0.12);
   --shadow-large: 0 8px 16px rgba(0, 0, 0, 0.15);
-  
-  --success-color: #107c10;
+    --success-color: #107c10;
+  --success-color-dark: #0e6a0e;
   --warning-color: #ff8c00;
   --error-color: #d13438;
   
@@ -66,6 +66,9 @@
   --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.3);
   --shadow-medium: 0 4px 8px rgba(0, 0, 0, 0.4);
   --shadow-large: 0 8px 16px rgba(0, 0, 0, 0.5);
+  
+  --success-color: #10b981;
+  --success-color-dark: #059669;
 }
 
 /* System theme detection */
@@ -90,6 +93,9 @@
     --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.3);
     --shadow-medium: 0 4px 8px rgba(0, 0, 0, 0.4);
     --shadow-large: 0 8px 16px rgba(0, 0, 0, 0.5);
+    
+    --success-color: #10b981;
+    --success-color-dark: #059669;
   }
 }
 

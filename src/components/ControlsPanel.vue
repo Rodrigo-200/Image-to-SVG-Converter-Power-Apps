@@ -6,6 +6,10 @@ const props = defineProps({
   settings: {
     type: Object,
     required: true
+  },
+  disabled: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -226,11 +230,11 @@ const svgColors = [
           <p class="info-text">
             Click "Convert to SVG" to process your image with our backend server using Potrace for crisp, scalable vector graphics.
           </p>
-        </div>
-        <button
+        </div>        <button
           @click="emit('convert')"
           class="convert-btn"
           type="button"
+          :disabled="disabled"
         >
           <RefreshCw class="btn-icon" />
           Convert to SVG
@@ -518,9 +522,18 @@ const svgColors = [
   box-shadow: var(--shadow-medium);
 }
 
-.btn-icon {
-  width: 1rem;
-  height: 1rem;
+.convert-btn:disabled {
+  background: var(--border-color);
+  color: var(--text-secondary);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.convert-btn:disabled:hover {
+  background: var(--border-color);
+  transform: none;
+  box-shadow: none;
 }
 
 @media (max-width: 768px) {

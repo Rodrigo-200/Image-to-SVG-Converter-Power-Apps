@@ -6,49 +6,90 @@ const getBackendUrl = () => {
   const currentProtocol = window.location.protocol
   const currentPort = window.location.port
   
-  // If running in production (Vercel or other hosting)
-  if (currentHost !== 'localhost' && currentHost !== '127.0.0.1') {
-    // For Vercel deployment, use /api prefix
-    if (currentHost.includes('vercel.app') || currentHost.includes('vercel.dev')) {
-      return `${currentProtocol}//${currentHost}/api`
-    }
-    // For other production hosts, use /api prefix
-    return `${currentProtocol}//${currentHost}/api`
-  }
+  // Check if this is a local development environment
+  const isLocalDev = 
+    currentHost === 'localhost' || 
+    currentHost === '127.0.0.1' || 
+    currentHost.startsWith('192.168.') || 
+    currentHost.startsWith('10.') || 
+    currentHost.startsWith('172.16.') ||
+    currentPort === '5173' // Vite default port
   
-  // If accessing from localhost with port (development), use localhost backend
-  if (currentPort === '5173' || currentPort === '5174' || currentPort === '5175') {
+  // If running in development (localhost or local network)
+  if (isLocalDev) {
+    // Always return localhost for development - we'll handle mobile access in the connection check
     return 'http://localhost:3001'
   }
   
-  // If accessing from IP address (local mobile), use same IP for backend
-  return `${currentProtocol}//${currentHost}:3001`
+  // If running in production (Vercel or other hosting)
+  if (currentHost.includes('vercel.app') || currentHost.includes('vercel.dev')) {
+    return `${currentProtocol}//${currentHost}/api`
+  }
+  
+  // For other production hosts, use /api prefix
+  return `${currentProtocol}//${currentHost}/api`
 }
 
-const BACKEND_URL = getBackendUrl()
+// Get possible backend URLs for development (with fallbacks for mobile access)
+const getBackendUrls = () => {
+  const currentHost = window.location.hostname
+  const currentProtocol = window.location.protocol
+  const urls = []
+  
+  // Primary URL
+  urls.push(getBackendUrl())
+  
+  // If accessing via IP address, also try backend on the same IP
+  if (currentHost.match(/^(\d+\.){3}\d+$/)) {
+    urls.push(`${currentProtocol}//${currentHost}:3001`)
+  }
+  
+  return urls
+}
+
+let BACKEND_URL = getBackendUrl()
 
 console.log('🔗 Backend URL configured:', BACKEND_URL)
 
-export function useImageConversion() {
-  const isProcessing = ref(false)
+export function useImageConversion() {  const isProcessing = ref(false)
   const processingProgress = ref(0)
   const error = ref('')
   const svgResult = ref('')
   const livePreviewSvg = ref('')
   const isBackendConnected = ref(false)
+  
   // Check if backend is available
   const checkBackendConnection = async () => {
-    try {
-      const response = await fetch(`${BACKEND_URL}/health`)
-      const result = await response.json()
-      isBackendConnected.value = result.status === 'healthy' || result.status === 'OK'
-      console.log('✅ Backend connection established:', result)
-      return isBackendConnected.value
-    } catch (err) {
-      console.error('❌ Backend connection failed:', err)
-      isBackendConnected.value = false
-      return false
+    const backendUrls = getBackendUrls()
+    
+    for (const url of backendUrls) {
+      try {
+        console.log(`🔍 Trying backend URL: ${url}`)
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 3000) // 3 second timeout
+        
+        const response = await fetch(`${url}/health`, {
+          signal: controller.signal
+        })
+        clearTimeout(timeoutId)
+        
+        const result = await response.json()
+        if (result.status === 'healthy' || result.status === 'OK') {
+          // Update the BACKEND_URL to the working one
+          BACKEND_URL = url
+          isBackendConnected.value = true
+          console.log('✅ Backend connection established:', result, 'URL:', url)
+          return true
+        }
+      } catch (err) {
+        console.log(`❌ Backend not reachable at ${url}:`, err.message)
+      }
     }
+    
+    console.log('ℹ️ Backend not available on any URL - running in frontend-only mode')
+    console.log('💡 To enable backend features, run: npm run dev:full')
+    isBackendConnected.value = false
+    return false
   }
 
   // Helper function to detect borders that would be removed
@@ -290,7 +331,6 @@ export function useImageConversion() {
       livePreviewSvg.value = ''
     }
   }
-
   // Main conversion function using backend
   const convertImageToSvg = async (imageFile, settings = {}) => {
     if (!imageFile) {
@@ -300,7 +340,7 @@ export function useImageConversion() {
     // Check backend connection first
     const connected = await checkBackendConnection()
     if (!connected) {
-      throw new Error('Backend server is not available. Please start the server with "npm run dev:full"')
+      throw new Error('High-quality backend conversion is not available. Please run "npm run dev:full" to start the backend server, or use the live preview as an alternative.')
     }
 
     isProcessing.value = true
@@ -372,9 +412,7 @@ export function useImageConversion() {
       error.value = err.message
       throw err
     }
-  }
-
-  // Simple color change for existing SVG (lightweight operation)
+  }  // Simple color change for existing SVG (lightweight operation)
   const changeSvgColor = (svgString, newColor) => {
     if (!svgString || !newColor) return svgString
     
@@ -382,6 +420,7 @@ export function useImageConversion() {
       .replace(/fill="[^"]*"/g, `fill="${newColor}"`)
       .replace(/stroke="[^"]*"/g, `stroke="${newColor}"`)
   }
+
   // Download SVG function
   const downloadSvg = (svgContent, filename = 'converted-image.svg') => {
     if (!svgContent) {
@@ -399,8 +438,7 @@ export function useImageConversion() {
       type: 'image/svg+xml;charset=utf-8' 
     })
     const url = URL.createObjectURL(blob)
-    
-    const link = document.createElement('a')
+      const link = document.createElement('a')
     link.href = url
     link.download = filename
     link.style.display = 'none'
@@ -413,7 +451,10 @@ export function useImageConversion() {
       URL.revokeObjectURL(url)
     }, 100)
   }
-
+  // Get current backend URL for debugging
+  const getCurrentBackendUrl = () => {
+    return BACKEND_URL
+  }
   // Initialize backend connection check
   checkBackendConnection()
 
@@ -428,6 +469,7 @@ export function useImageConversion() {
     updateLivePreview,
     changeSvgColor,
     downloadSvg,
-    checkBackendConnection
+    checkBackendConnection,
+    getCurrentBackendUrl
   }
 }

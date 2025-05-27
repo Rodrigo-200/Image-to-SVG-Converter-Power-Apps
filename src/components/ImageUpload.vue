@@ -120,28 +120,22 @@ const formatFileSize = (bytes) => {
         <div class="supported-formats">
           <small>Supported formats: JPG, PNG, GIF, WEBP, BMP</small>
         </div>
-      </div>
-
-      <div v-else class="file-preview">
-        <div class="preview-image">
-          <img :src="previewUrl" :alt="selectedFile.name" />
-        </div>
-        <div class="file-info">
+      </div>      <div v-else class="file-selected">
+        <div class="selected-info">
+          <FileImage class="file-icon" />
           <div class="file-details">
-            <FileImage class="file-icon" />
-            <div>
-              <div class="file-name">{{ selectedFile.name }}</div>
-              <div class="file-size">{{ formatFileSize(selectedFile.size) }}</div>
-            </div>
+            <div class="file-name">{{ selectedFile.name }}</div>
+            <div class="file-meta">{{ formatFileSize(selectedFile.size) }} • {{ selectedFile.type.split('/')[1].toUpperCase() }}</div>
           </div>
-          <button
-            class="clear-btn"
-            @click.stop="clearSelection"
-            type="button"
-          >
-            <X class="clear-icon" />
-          </button>
         </div>
+        <button
+          class="clear-btn"
+          @click.stop="clearSelection"
+          type="button"
+          title="Remove image"
+        >
+          <X class="clear-icon" />
+        </button>
       </div>
     </div>
   </div>
@@ -225,56 +219,44 @@ const formatFileSize = (bytes) => {
   margin-top: 1rem;
 }
 
-.file-preview {
+.file-selected {
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.preview-image {
-  max-width: 200px;
-  margin: 0 auto;
-  border-radius: var(--radius-medium);
-  overflow: hidden;
-  box-shadow: var(--shadow-medium);
-}
-
-.preview-image img {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
-.file-info {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 1rem;
   background: var(--bg-primary);
   border-radius: var(--radius-medium);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--success-color);
+}
+
+.selected-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
 }
 
 .file-details {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .file-icon {
   width: 1.5rem;
   height: 1.5rem;
-  color: var(--primary-color);
+  color: var(--success-color);
 }
 
 .file-name {
   font-weight: 500;
   color: var(--text-primary);
+  font-size: 0.9rem;
 }
 
-.file-size {
-  font-size: 0.875rem;
+.file-meta {
+  font-size: 0.75rem;
   color: var(--text-secondary);
 }
 
@@ -325,17 +307,21 @@ const formatFileSize = (bytes) => {
     width: 100%;
     max-width: 200px;
   }
-  
-  .file-info {
-    padding: 1rem;
+    .file-selected {
+    padding: 0.75rem;
   }
   
   .file-name {
-    font-size: 0.875rem;
+    font-size: 0.8rem;
   }
   
-  .file-details {
-    font-size: 0.75rem;
+  .file-meta {
+    font-size: 0.7rem;
+  }
+  
+  .file-icon {
+    width: 1.25rem;
+    height: 1.25rem;
   }
 }
 </style>

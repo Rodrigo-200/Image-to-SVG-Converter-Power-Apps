@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch, onBeforeUnmount } from 'vue'
-import { Eye, EyeOff, RotateCcw, Zap } from 'lucide-vue-next'
+import { Eye, EyeOff, RotateCcw, Zap, ChevronDown, ChevronUp } from 'lucide-vue-next'
 
 const props = defineProps({
   image: {
@@ -28,6 +28,7 @@ const props = defineProps({
 const showOriginal = ref(true)
 const previewContainer = ref(null)
 const imageUrl = ref(null)
+const showInfoMobile = ref(false)
 
 // Create and manage blob URL for the image
 watch(() => props.image, (newImage, oldImage) => {
@@ -292,8 +293,16 @@ watch(showBorderPreview, async (show) => {
       </div>
     </div>    <!-- Image Info -->
     <div v-if="hasContent" class="image-info">
-      <div class="info-section">
-        <h4>{{ showOriginal ? 'Original' : 'SVG' }} Image</h4>
+      <!-- Mobile Collapsible Header -->
+      <div class="mobile-info-header" @click="showInfoMobile = !showInfoMobile">
+        <h4>{{ showOriginal ? 'Original' : 'SVG' }} Image Details</h4>
+        <component :is="showInfoMobile ? ChevronUp : ChevronDown" class="mobile-chevron" />
+      </div>
+      
+      <!-- Info Content -->
+      <div class="info-content" :class="{ 'mobile-collapsed': !showInfoMobile }">
+        <div class="info-section">
+          <h4 class="desktop-title">{{ showOriginal ? 'Original' : 'SVG' }} Image</h4>
           <!-- Border removal info -->
         <div v-if="removeBorder && !showOriginal && svgResult" class="border-info-message">
           <span class="border-icon">🔶</span>
@@ -322,6 +331,7 @@ watch(showBorderPreview, async (show) => {
             <span class="info-label">SVG Size:</span>
             <span class="info-value">{{ formatFileSize(svgSize) }}</span>
           </div>
+        </div>
         </div>
       </div>
     </div>
@@ -486,6 +496,26 @@ watch(showBorderPreview, async (show) => {
   padding: 1rem;
 }
 
+.mobile-info-header {
+  display: none;
+}
+
+.desktop-title {
+  display: block;
+  margin: 0 0 1rem 0;
+  color: var(--text-primary);
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.info-content {
+  transition: all 0.3s ease;
+}
+
+.mobile-collapsed {
+  display: none;
+}
+
 .info-section h4 {
   margin: 0 0 0.75rem 0;
   color: var(--text-primary);
@@ -644,79 +674,178 @@ watch(showBorderPreview, async (show) => {
 @media (max-width: 768px) {
   .preview-area {
     margin: 0;
+    gap: 0.75rem;
   }
 
   .preview-header {
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.5rem;
     align-items: stretch;
-    padding: 1rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .preview-header h3 {
+    font-size: 1.125rem;
+    margin: 0;
   }
   
   .preview-controls {
     justify-content: center;
-    gap: 0.5rem;
+    gap: 0.375rem;
   }
   
-  .toggle-btn {
+  .toggle-btn, .reset-btn {
     flex: 1;
     justify-content: center;
-    padding: 0.75rem 1rem;
-    font-size: 0.875rem;
-    min-height: 44px;
+    padding: 0.625rem 0.75rem;
+    font-size: 0.8rem;
+    min-height: 42px;
+  }
+  
+  .btn-icon {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+  
+  .live-indicator {
+    padding: 0.375rem 0.625rem;
+    font-size: 0.75rem;
+    margin: 0 auto;
+  }
+  
+  .indicator-icon {
+    width: 0.875rem;
+    height: 0.875rem;
   }
   
   .preview-container {
-    height: 250px;
+    min-height: 200px;
     margin: 0;
   }
   
-  .preview-item {
+  .preview-background {
     min-height: 200px;
-    padding: 1rem;
+    padding: 0.75rem;
   }
   
-  .preview-item h3 {
-    font-size: 1rem;
+  .no-content {
+    min-height: 200px;
+  }
+  
+  .no-content-icon {
+    width: 2rem;
+    height: 2rem;
     margin-bottom: 0.75rem;
   }
   
-  .info-grid {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
+  .no-content-message p {
+    font-size: 0.875rem;
+    margin: 0.5rem 0;
+  }
+  
+  .no-content-message small {
+    font-size: 0.75rem;
+  }
+    .image-info {
+    padding: 0;
+    border: none;
+    background: transparent;
+  }
+  
+  .mobile-info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-medium);
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+  }
+  
+  .mobile-info-header:hover {
+    background: var(--bg-secondary);
+  }
+  
+  .mobile-info-header h4 {
+    font-size: 0.875rem;
+    margin: 0;
+    color: var(--text-primary);
+  }
+  
+  .mobile-chevron {
+    width: 1rem;
+    height: 1rem;
+    color: var(--text-secondary);
+    transition: transform 0.2s ease;
+  }
+  
+  .desktop-title {
+    display: none !important;
+  }
+  
+  .info-content {
+    overflow: hidden;
+    margin-top: 0.5rem;
+  }
+  
+  .info-content:not(.mobile-collapsed) .info-section {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-medium);
+    padding: 0.75rem;
+  }
+  
+  .mobile-collapsed {
+    max-height: 0;
+    margin-top: 0;
+    opacity: 0;
+  }
+  
+  .info-section h4 {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .border-info-message {
+    padding: 0.375rem 0.625rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.75rem;
+  }
+  
+  .info-details {
+    gap: 0.375rem;
   }
   
   .info-item {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem;
-    background: var(--bg-secondary);
-    border-radius: var(--radius-small);
-  }
-  
-  .info-label {
     font-size: 0.75rem;
-    flex-shrink: 0;
+    padding: 0.25rem 0;
   }
   
   .info-value {
-    text-align: right;
+    font-size: 0.7rem;
+    padding: 0.1rem 0.25rem;
+  }
+  
+  .background-info {
+    font-size: 0.7rem;
+    padding: 0.375rem;
+    margin: 0;
+  }
+  
+  .updating-indicator {
+    top: 0.75rem;
+    right: 0.75rem;
+    padding: 0.375rem 0.625rem;
     font-size: 0.75rem;
-    font-weight: 500;
   }
   
-  .download-section {
-    padding: 1rem;
-  }
-  
-  .download-btn {
-    width: 100%;
-    justify-content: center;
-    padding: 1rem;
-    font-size: 1rem;
-    min-height: 48px;
+  .updating-icon {
+    width: 0.875rem;
+    height: 0.875rem;
   }
 }
 </style>
