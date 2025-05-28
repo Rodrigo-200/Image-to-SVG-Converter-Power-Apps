@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.1] - 2025-05-28
+### Fixed
+- Progress tracking bug where single image conversions from multiple-image queue incorrectly showed batch progress ("X of Y completed") instead of simple progress
+- Loading modal now correctly differentiates between single image and batch processing operations
+- Added `isBatchProcessing` state tracking to distinguish between conversion types
+
 ## [1.5.0] - 2024-12-19
 **Status**: ✅ COMPLETED - All features implemented and tested
 

@@ -20,6 +20,7 @@ const showWelcome = ref(true)
 // Performance optimization
 const perfSettings = getOptimalProcessingSettings()
 const isProcessingOptimized = ref(false)
+const isBatchProcessing = ref(false) // Track if we're doing batch vs single image processing
 let currentOperation = null
 
 const settings = reactive({
@@ -221,6 +222,9 @@ const convertToSvg = async () => {
   if (!currentImageFile.value || !currentImageData.value) return
   
   try {
+    // Mark as single image processing (not batch)
+    isBatchProcessing.value = false
+    
     // Mark current image as being processed
     currentImageData.value.processed = false
     currentImageData.value.error = null
@@ -255,6 +259,8 @@ const convertAllToSvg = async () => {
   if (imageQueue.value.length === 0) return
   
   try {
+    // Mark as batch processing
+    isBatchProcessing.value = true
     isProcessing.value = true
     processingProgress.value = 0
     
@@ -310,11 +316,11 @@ const convertAllToSvg = async () => {
       svgResult.value = currentImageData.value.svgResult || ''
       livePreviewSvg.value = currentImageData.value.livePreview || ''
     }
-    
-  } catch (error) {
+      } catch (error) {
     console.error('Error in batch conversion:', error)
     alert('Error during batch conversion. Please try again.')
   } finally {
+    isBatchProcessing.value = false
     isProcessing.value = false
     processingProgress.value = 0
   }
@@ -534,19 +540,18 @@ onMounted(() => {
                 <div class="spinner-ring"></div>
                 <div class="spinner-core"></div>
               </div>
-              
-              <h3 class="loading-title">
-                {{ hasMultipleImages ? 'Converting Images to SVG' : 'Converting to SVG' }}
+                <h3 class="loading-title">
+                {{ isBatchProcessing ? 'Converting Images to SVG' : 'Converting to SVG' }}
               </h3>
               <p class="loading-subtitle">
-                {{ hasMultipleImages 
+                {{ isBatchProcessing 
                   ? `Processing ${currentImageIndex + 1} of ${imageQueue.length} images...` 
                   : 'Please wait while we process your image...' 
                 }}
               </p>
               
               <!-- Current file name for batch processing -->
-              <div v-if="hasMultipleImages && currentImageFile" class="current-file-info">
+              <div v-if="isBatchProcessing && currentImageFile" class="current-file-info">
                 <span class="current-file-label">Current file:</span>
                 <span class="current-file-name">{{ currentImageFile.name }}</span>
               </div>
@@ -557,8 +562,7 @@ onMounted(() => {
                 <div class="progress-text">
                   <div class="progress-main">
                     <span class="progress-percentage">{{ processingProgress }}%</span>
-                  </div>
-                  <div v-if="hasMultipleImages" class="progress-details">
+                  </div>                  <div v-if="isBatchProcessing" class="progress-details">
                     {{ Math.ceil((processingProgress / 100) * imageQueue.length) }} of {{ imageQueue.length }} completed
                   </div>
                 </div>

@@ -6,7 +6,7 @@ A professional Vue.js web application that converts images to SVG format specifi
 ![Vite](https://img.shields.io/badge/Vite-6.0-646CFF?style=flat-square&logo=vite&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-Backend-339933?style=flat-square&logo=node.js&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)
-![Version](https://img.shields.io/badge/Version-1.5.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.5.1-blue?style=flat-square)
 
 **[🚀 Live Demo](https://image-to-svg-converter-power-apps.vercel.app/)**
 
