@@ -22,8 +22,23 @@ const props = defineProps({
   removeBorder: {
     type: Boolean,
     default: false
+  },
+  // New props for batch processing
+  imageQueue: {
+    type: Array,
+    default: () => []
+  },
+  currentImageIndex: {
+    type: Number,
+    default: 0
+  },
+  hasMultipleImages: {
+    type: Boolean,
+    default: false
   }
 })
+
+const emit = defineEmits(['remove-image', 'switch-image'])
 
 const showOriginal = ref(true)
 const previewContainer = ref(null)
@@ -212,12 +227,62 @@ watch(showBorderPreview, async (show) => {
     borderPreviewUrl.value = null
   }
 })
+
+// File queue management
+const removeCurrentImage = () => {
+  emit('remove-image', props.currentImageIndex)
+}
+
+const switchToImage = (index) => {
+  emit('switch-image', index)
+}
+
+const canRemoveSingle = computed(() => {
+  return props.hasMultipleImages
+})
 </script>
 
 <template>
-  <div class="preview-area">
-    <div class="preview-header">
+  <div class="preview-area">    <div class="preview-header">
       <h3>Preview</h3>
+      
+      <!-- File Queue Navigation (when multiple files) -->
+      <div v-if="hasMultipleImages" class="file-queue-nav">
+        <div class="queue-info">
+          <span class="current-file">{{ currentImageIndex + 1 }} of {{ imageQueue.length }}</span>
+          <span class="file-name">{{ image?.name || 'Unknown' }}</span>
+        </div>
+        <div class="queue-controls">
+          <button
+            @click="switchToImage(currentImageIndex - 1)"
+            :disabled="currentImageIndex === 0"
+            class="nav-btn"
+            type="button"
+            title="Previous image"
+          >
+            ‹
+          </button>
+          <button
+            @click="switchToImage(currentImageIndex + 1)"
+            :disabled="currentImageIndex >= imageQueue.length - 1"
+            class="nav-btn"
+            type="button"
+            title="Next image"
+          >
+            ›
+          </button>
+          <button
+            v-if="canRemoveSingle"
+            @click="removeCurrentImage"
+            class="remove-btn"
+            type="button"
+            title="Remove this image"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+      
       <div v-if="canToggleView" class="preview-controls">
         <button
           @click="toggleView"
@@ -872,5 +937,82 @@ watch(showBorderPreview, async (show) => {
     width: 0.875rem;
     height: 0.875rem;
   }
+}
+
+/* File Queue Navigation */
+.file-queue-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-small);
+  margin-bottom: 0.5rem;
+}
+
+.queue-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.current-file {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.file-name {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  font-weight: 500;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.queue-controls {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.nav-btn, .remove-btn {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-small);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.nav-btn:hover:not(:disabled), .remove-btn:hover {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.nav-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.remove-btn {
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
+.remove-btn:hover {
+  background: #dc3545;
+  color: white;
 }
 </style>

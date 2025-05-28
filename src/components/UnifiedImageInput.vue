@@ -82,28 +82,38 @@ const showSuccessAnimationEffect = () => {
   }, 1500)
 }
 
-// File handling
-const handleFileSelect = (file) => {
-  if (isValidFile(file)) {
-    isAnimating.value = true
-    setTimeout(() => {
-      selectedFile.value = file
-      emit('image-selected', file)
-      isAnimating.value = false
-    }, 300)
-  } else {
-    displayError('Please select a valid image file (JPG, PNG, GIF, WEBP, BMP)')
+// File handling - Updated to support multiple files
+const handleFileSelect = (fileOrFiles) => {
+  const files = Array.isArray(fileOrFiles) ? fileOrFiles : [fileOrFiles]
+  const validFiles = files.filter(isValidFile)
+  
+  if (validFiles.length === 0) {
+    displayError('Please select valid image files (JPG, PNG, GIF, WEBP, BMP)')
+    return
   }
+  
+  if (validFiles.length !== files.length) {
+    displayError(`${files.length - validFiles.length} file(s) were skipped (invalid format)`)
+  }
+  
+  isAnimating.value = true
+  setTimeout(() => {
+    // For preview, use the first valid file
+    selectedFile.value = validFiles[0]
+    // Emit all valid files (single file or array)
+    emit('image-selected', validFiles.length === 1 ? validFiles[0] : validFiles)
+    isAnimating.value = false
+  }, 300)
 }
 
-// Drag and drop
+// Drag and drop - Updated to support multiple files
 const handleDrop = (e) => {
   e.preventDefault()
   dragActive.value = false
   
   const files = Array.from(e.dataTransfer.files)
   if (files.length > 0) {
-    handleFileSelect(files[0])
+    handleFileSelect(files)
   }
 }
 
@@ -119,15 +129,15 @@ const handleDragLeave = (e) => {
   }
 }
 
-// File input
+// File input - Updated to support multiple files
 const openFileDialog = () => {
   fileInput.value?.click()
 }
 
 const handleFileInputChange = (e) => {
-  const file = e.target.files?.[0]
-  if (file) {
-    handleFileSelect(file)
+  const files = Array.from(e.target.files || [])
+  if (files.length > 0) {
+    handleFileSelect(files)
   }
 }
 
@@ -373,10 +383,10 @@ const resetEverything = () => {
           @dragover="handleDragOver"
           @dragleave="handleDragLeave"
           @click="openFileDialog"
-        >
-          <input
+        >          <input
             ref="fileInput"
             type="file"
+            multiple
             :accept="acceptedTypes.join(',')"
             @change="handleFileInputChange"
             class="file-input"
@@ -385,11 +395,10 @@ const resetEverything = () => {
           <div class="upload-content">            <div class="upload-icon-container" :class="{ 'animating': isAnimating }">
               <Upload class="upload-icon" />
               <Sparkles v-if="showSuccessAnimation" class="success-sparkles" />
-            </div>
-            <h3>Drop your image here</h3>
+            </div>            <h3>Drop your images here</h3>
             <p>or <span class="link-text">click to browse</span></p>
             <div class="supported-formats">
-              <small>JPG, PNG, GIF, WEBP, BMP</small>
+              <small>JPG, PNG, GIF, WEBP, BMP • Multiple files supported</small>
             </div>
           </div>
         </div>

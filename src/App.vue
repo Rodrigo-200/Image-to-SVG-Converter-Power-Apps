@@ -9,6 +9,8 @@ import { Settings, Download, Palette, Maximize2, ChevronUp, ChevronDown, Minimiz
 
 // Application state
 const currentImage = ref(null)
+const imageQueue = ref([]) // New: Array to hold multiple images
+const currentImageIndex = ref(0) // New: Current image being viewed/processed
 const showWelcome = ref(true)
 
 const settings = reactive({
@@ -36,14 +38,27 @@ const {
 } = useImageConversion()
 
 // Computed properties
-const hasImage = computed(() => currentImage.value !== null)
+const hasImage = computed(() => imageQueue.value.length > 0)
 const hasSvgResult = computed(() => svgResult.value !== '')
 const currentPreviewSvg = computed(() => livePreviewSvg.value || svgResult.value)
+const hasMultipleImages = computed(() => imageQueue.value.length > 1)
+const currentImageFile = computed(() => {
+  if (imageQueue.value.length > 0 && currentImageIndex.value < imageQueue.value.length) {
+    return imageQueue.value[currentImageIndex.value].file
+  }
+  return null
+})
+const currentImageData = computed(() => {
+  if (imageQueue.value.length > 0 && currentImageIndex.value < imageQueue.value.length) {
+    return imageQueue.value[currentImageIndex.value]
+  }
+  return null
+})
 
 // Watch for settings changes to update live preview (but don't update for color changes if we have SVG result)
 watch([() => settings.removeBorder, () => settings.size], () => {
-  if (currentImage.value) {
-    updateLivePreview(currentImage.value, settings)
+  if (currentImageFile.value) {
+    updateLivePreview(currentImageFile.value, settings)
   }
 })
 
@@ -54,23 +69,93 @@ watch(() => settings.svgColor, (newColor) => {
     const updatedSvg = changeSvgColor(svgResult.value, newColor)
     // Note: we don't update svgResult here to avoid infinite loops
     // The preview will show the updated color
-  } else if (currentImage.value && !svgResult.value) {
+  } else if (currentImageFile.value && !svgResult.value) {
     // Only update live preview if we don't have a final result yet
-    updateLivePreview(currentImage.value, settings)
+    updateLivePreview(currentImageFile.value, settings)
   }
 })
 
 // Methods
-const handleImageSelected = (imageFile) => {
-  currentImage.value = imageFile
+const handleImageSelected = (imageFileOrFiles) => {
+  // Handle both single file and multiple files
+  const files = Array.isArray(imageFileOrFiles) ? imageFileOrFiles : [imageFileOrFiles]
+  
+  // Create image data objects for each file
+  const newImageData = files.map(file => ({
+    file,
+    id: Date.now() + Math.random(), // Unique ID for each image
+    svgResult: '',
+    livePreview: '',
+    processed: false,
+    error: null
+  }))
+  
+  // Add to queue
+  imageQueue.value.push(...newImageData)
+  
+  // Set current image to the first new one if we don't have one selected
+  if (currentImageIndex.value >= imageQueue.value.length - newImageData.length) {
+    currentImageIndex.value = imageQueue.value.length - newImageData.length
+  }
+  
+  // Update current image reference for backwards compatibility
+  currentImage.value = currentImageFile.value
+  
   showWelcome.value = false
-  // Start live preview immediately
-  updateLivePreview(imageFile, settings)
+  
+  // Start live preview for current image
+  if (currentImageFile.value) {
+    updateLivePreview(currentImageFile.value, settings)
+  }
+}
+
+const removeImageFromQueue = (index) => {
+  if (index >= 0 && index < imageQueue.value.length) {
+    imageQueue.value.splice(index, 1)
+    
+    // Adjust current index if needed
+    if (currentImageIndex.value >= imageQueue.value.length) {
+      currentImageIndex.value = Math.max(0, imageQueue.value.length - 1)
+    }
+    
+    // Update current image reference
+    currentImage.value = currentImageFile.value
+    
+    // If no images left, show welcome
+    if (imageQueue.value.length === 0) {
+      showWelcome.value = true
+      currentImage.value = null
+      svgResult.value = ''
+      livePreviewSvg.value = ''
+    } else if (currentImageFile.value) {
+      // Update preview for new current image
+      updateLivePreview(currentImageFile.value, settings)
+    }
+  }
+}
+
+const switchToImage = (index) => {
+  if (index >= 0 && index < imageQueue.value.length) {
+    currentImageIndex.value = index
+    currentImage.value = currentImageFile.value
+    
+    // Load saved results for this image or update live preview
+    const imageData = imageQueue.value[index]
+    if (imageData.svgResult) {
+      svgResult.value = imageData.svgResult
+      livePreviewSvg.value = imageData.livePreview || ''
+    } else {
+      svgResult.value = ''
+      updateLivePreview(currentImageFile.value, settings)
+    }
+  }
 }
 
 const handleAppReset = () => {
   // Reset all application state
   currentImage.value = null
+  imageQueue.value = []
+  currentImageIndex.value = 0
   showWelcome.value = true
   
   // Clear SVG results
@@ -93,17 +178,32 @@ const handleAppReset = () => {
 }
 
 const convertToSvg = async () => {
-  if (!currentImage.value) return
+  if (!currentImageFile.value || !currentImageData.value) return
   
   try {
-    await convertImageToSvg(currentImage.value, {
+    // Mark current image as being processed
+    currentImageData.value.processed = false
+    currentImageData.value.error = null
+    
+    await convertImageToSvg(currentImageFile.value, {
       removeBorder: settings.removeBorder,
       svgColor: settings.svgColor === '#000000' ? null : settings.svgColor,
       quality: settings.quality,
       size: settings.size
     })
+    
+    // Save the result to the current image data
+    currentImageData.value.svgResult = svgResult.value
+    currentImageData.value.livePreview = livePreviewSvg.value
+    currentImageData.value.processed = true
+    
   } catch (error) {
     console.error('Error converting to SVG:', error)
+    
+    // Save error state to current image data
+    currentImageData.value.error = error.message
+    currentImageData.value.processed = false
+    
     // Show a user-friendly message for backend unavailable
     if (error.message.includes('not available')) {
       alert('High-quality conversion requires the backend server. The live preview shows a simplified version of your image. To enable full conversion, run "npm run dev:full" in your terminal.')
@@ -287,13 +387,17 @@ onMounted(() => {
         <div class="workspace" v-if="hasImage">
           <div class="workspace-grid">
             <!-- Preview Area -->
-            <div class="preview-section">
-              <PreviewArea 
-                :image="currentImage"
+            <div class="preview-section">              <PreviewArea 
+                :image="currentImageFile"
                 :svg-result="currentPreviewSvg"
                 :background-color="settings.backgroundColor"
                 :is-live-preview="!!livePreviewSvg"
                 :remove-border="settings.removeBorder"
+                :image-queue="imageQueue"
+                :current-image-index="currentImageIndex"
+                :has-multiple-images="hasMultipleImages"
+                @remove-image="removeImageFromQueue"
+                @switch-image="switchToImage"
               />
             </div>            <!-- Controls Panel -->
             <div class="controls-section">
