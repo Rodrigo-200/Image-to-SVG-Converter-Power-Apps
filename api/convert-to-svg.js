@@ -70,10 +70,9 @@ export default async function handler(req, res) {
         try {
           const borders = JSON.parse(borderData);
           console.log('🔍 Using precise border data:', borders);
-          
-          // Calculate extraction area based on precise border detection
-          const left = borders.contentArea.left;
-          const top = borders.contentArea.top;
+            // Calculate extraction area based on precise border detection
+          const left = borders.contentArea.x;
+          const top = borders.contentArea.y;
           const width = Math.max(1, borders.contentArea.width);
           const height = Math.max(1, borders.contentArea.height);
           
