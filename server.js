@@ -36,15 +36,15 @@ app.use(cors({
   credentials: true
 }))
 
-app.use(express.json({ limit: '50mb' }))
-app.use(express.urlencoded({ extended: true, limit: '50mb' }))
+app.use(express.json({ limit: '1gb' }))
+app.use(express.urlencoded({ extended: true, limit: '1gb' }))
 
 // Configure multer for file uploads
 const storage = multer.memoryStorage()
 const upload = multer({ 
   storage,
   limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB limit
+    fileSize: 1024 * 1024 * 1024 // 1GB limit
   }
 })
 

@@ -28,11 +28,9 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  try {    console.log('🎯 Vercel: Converting image to SVG...');
-
-    // Parse form data
+  try {    console.log('🎯 Vercel: Converting image to SVG...');    // Parse form data
     const form = formidable({
-      maxFileSize: 10 * 1024 * 1024, // 10MB
+      maxFileSize: 1024 * 1024 * 1024, // 1GB
       keepExtensions: true,
     });
 

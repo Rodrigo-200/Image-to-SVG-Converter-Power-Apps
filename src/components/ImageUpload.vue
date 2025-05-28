@@ -12,7 +12,7 @@ const isAnimating = ref(false)
 const showSuccess = ref(false)
 
 const acceptedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp']
-const maxFileSize = 10 * 1024 * 1024 // 10MB in bytes
+const maxFileSize = 1024 * 1024 * 1024 // 1GB in bytes
 
 const isValidFile = (file) => {
   if (!file || !acceptedTypes.includes(file.type)) {
@@ -20,7 +20,7 @@ const isValidFile = (file) => {
   }
   
   if (file.size > maxFileSize) {
-    return { valid: false, error: `File size exceeds 10MB limit. Current size: ${formatFileSize(file.size)}` }
+    return { valid: false, error: `File size exceeds 1GB limit. Current size: ${formatFileSize(file.size)}` }
   }
   
   return { valid: true }
@@ -141,7 +141,7 @@ const formatFileSize = (bytes) => {
         <h3>Drag & drop your image here</h3>
         <p>or <span class="link-text">click to browse</span></p>        <div class="supported-formats">
           <small>Supported formats: JPG, PNG, GIF, WEBP, BMP</small>
-          <small class="size-limit">Maximum file size: 10MB</small>
+          <small class="size-limit">Maximum file size: 1GB</small>
         </div>
       </div>
       

@@ -2,11 +2,13 @@
   "version": 2,
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "public": true,
-  "functions": {
+  "public": true,  "functions": {
     "api/convert-to-svg.js": {
       "maxDuration": 30
     }
+  },
+  "limits": {
+    "maxRequestBodySize": "1gb"
   },
   "headers": [
     {
