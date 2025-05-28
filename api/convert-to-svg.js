@@ -28,8 +28,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  try {
-    console.log('🎯 Vercel: Converting image to SVG...');
+  try {    console.log('🎯 Vercel: Converting image to SVG...');
 
     // Parse form data
     const form = formidable({
@@ -51,8 +50,9 @@ export default async function handler(req, res) {
     const svgColor = fields.svgColor?.[0];
     const size = fields.size?.[0];
     const quality = fields.quality?.[0];
+    const borderData = fields.borderData?.[0];
 
-    console.log('⚙️ Options:', { removeBorder, svgColor, size, quality });
+    console.log('⚙️ Options:', { removeBorder, svgColor, size, quality, hasBorderData: !!borderData });
 
     // Read the uploaded file
     const imageBuffer = fs.readFileSync(imageFile.filepath);
@@ -64,13 +64,46 @@ export default async function handler(req, res) {
     const metadata = await sharpImage.metadata();
     console.log('📏 Original dimensions:', metadata.width, 'x', metadata.height);
 
-    // Remove border if requested
+    // Remove border if requested - use precise border data if available
     if (removeBorder) {
-      sharpImage = sharpImage.trim({
-        background: '#ffffff',
-        threshold: 10
-      });
-      console.log('✂️ Border removal applied');
+      if (borderData) {
+        try {
+          const borders = JSON.parse(borderData);
+          console.log('🔍 Using precise border data:', borders);
+          
+          // Calculate extraction area based on precise border detection
+          const left = borders.contentArea.left;
+          const top = borders.contentArea.top;
+          const width = Math.max(1, borders.contentArea.width);
+          const height = Math.max(1, borders.contentArea.height);
+          
+          console.log('✂️ Extracting area:', { left, top, width, height });
+          
+          // Use Sharp's extract method for precise pixel-perfect cropping
+          sharpImage = sharpImage.extract({
+            left: left,
+            top: top,
+            width: width,
+            height: height
+          });
+          console.log('✅ Precise border removal applied using frontend detection');
+        } catch (err) {
+          console.warn('⚠️ Failed to parse border data, falling back to basic trim:', err.message);
+          // Fallback to basic trim
+          sharpImage = sharpImage.trim({
+            background: '#ffffff',
+            threshold: 10
+          });
+          console.log('✂️ Basic border removal applied (fallback)');
+        }
+      } else {
+        // Fallback to basic trim when no border data is provided
+        sharpImage = sharpImage.trim({
+          background: '#ffffff',
+          threshold: 10
+        });
+        console.log('✂️ Basic border removal applied (no border data)');
+      }
     }
 
     // Resize if needed

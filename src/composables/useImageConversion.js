@@ -175,8 +175,66 @@ export function useImageConversion() {  const isProcessing = ref(false)
     console.log('🔍 Border detection complete:', result)
     console.log('🔍 Borders found:', result.top > 0 || result.bottom > 0 || result.left > 0 || result.right > 0)
     
-    return result
+    return result  }
+  
+  // Function to detect borders in image for backend use
+  const detectImageBorders = async (imageFile) => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      const img = new Image()
+      const url = URL.createObjectURL(imageFile)
+
+      img.onload = () => {
+        URL.revokeObjectURL(url) // Clean up blob URL
+
+        // Use original image size for precise border detection
+        canvas.width = img.naturalWidth
+        canvas.height = img.naturalHeight
+
+        // Draw the image at full resolution
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+
+        // Get image data for processing
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+        
+        // Detect borders using the same logic as preview
+        const borders = detectBorders(imageData, canvas.width, canvas.height)
+        
+        console.log('🔍 Full resolution border detection:', {
+          originalSize: `${canvas.width}x${canvas.height}`,
+          borders,
+          contentArea: {
+            left: borders.left,
+            top: borders.top,
+            width: canvas.width - borders.left - borders.right,
+            height: canvas.height - borders.top - borders.bottom
+          }
+        })
+        
+        resolve({
+          originalWidth: canvas.width,
+          originalHeight: canvas.height,
+          borders,
+          contentArea: {
+            left: borders.left,
+            top: borders.top,
+            width: Math.max(1, canvas.width - borders.left - borders.right),
+            height: Math.max(1, canvas.height - borders.top - borders.bottom)
+          }
+        })
+      }
+
+      img.onerror = () => {
+        URL.revokeObjectURL(url) // Clean up blob URL even on error
+        console.error('Failed to load image for border detection')
+        resolve(null)
+      }
+
+      img.src = url
+    })
   }
+  
   // Live preview function - creates image-like SVG preview with visible border detection
   const updateLivePreview = async (imageFile, settings = {}) => {
     if (!imageFile) {
@@ -347,8 +405,7 @@ export function useImageConversion() {  const isProcessing = ref(false)
     if (!isBatchOperation) {
       isProcessing.value = true
       processingProgress.value = 0
-    }
-    
+    }    
     error.value = ''
     svgResult.value = ''
 
@@ -356,33 +413,52 @@ export function useImageConversion() {  const isProcessing = ref(false)
       console.log('🚀 Starting backend conversion...')
       if (!isBatchOperation) {
         processingProgress.value = 10
-      }      // Prepare form data
+      }
+
+      // Detect borders if border removal is enabled
+      let borderData = null
+      if (settings.removeBorder) {
+        console.log('🔍 Detecting borders for precise removal...')
+        borderData = await detectImageBorders(imageFile)
+        if (borderData) {
+          console.log('🔍 Border data for backend:', borderData)
+        }
+        if (!isBatchOperation) {
+          processingProgress.value = 20
+        }
+      }
+
+      // Prepare form data
       const formData = new FormData()
       formData.append('image', imageFile)
       formData.append('removeBorder', settings.removeBorder ? 'true' : 'false')
       formData.append('svgColor', settings.svgColor || '#000000')
       formData.append('size', settings.size || 'auto')
       formData.append('quality', settings.quality || 'high')
+      
+      // Pass border data for precise cropping
+      if (borderData) {
+        formData.append('borderData', JSON.stringify(borderData))
+      }
 
       console.log('📤 Sending to backend with settings:', {
         removeBorder: settings.removeBorder,
         svgColor: settings.svgColor,
         size: settings.size,
-        quality: settings.quality
+        quality: settings.quality,
+        hasBorderData: !!borderData
       })
 
       if (!isBatchOperation) {
-        processingProgress.value = 30
-      }
-
-      // Send to backend
+        processingProgress.value = 35
+      }      // Send to backend
       const response = await fetch(`${BACKEND_URL}/convert-to-svg`, {
         method: 'POST',
         body: formData
       })
 
       if (!isBatchOperation) {
-        processingProgress.value = 70
+        processingProgress.value = 75
       }
 
       if (!response.ok) {

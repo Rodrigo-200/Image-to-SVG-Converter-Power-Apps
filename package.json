@@ -1,6 +1,6 @@
 {
   "name": "image-to-svg-converter-power-apps",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "description": "A Vue.js web application that converts images to SVG format optimized for Microsoft Power Apps",
   "type": "module",
   "keywords": [
