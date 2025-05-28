@@ -27,6 +27,7 @@ const props = defineProps({
 // State management
 const activeMethod = ref('upload')
 const dragActive = ref(false)
+const localSelectedFile = ref(null)
 const selectedFile = computed(() => {
   // Use current image from props if available, otherwise use local state
   if (props.imageQueue.length > 0 && props.currentImageIndex < props.imageQueue.length) {
@@ -34,7 +35,6 @@ const selectedFile = computed(() => {
   }
   return localSelectedFile.value
 })
-const localSelectedFile = ref(null)
 const previewUrl = ref(null)
 const isAnimating = ref(false)
 const showSuccessAnimation = ref(false)
@@ -294,9 +294,9 @@ onBeforeUnmount(() => {
 
 // Utility functions
 const handleRemoveFile = () => {
-  if (hasMultipleImages.value) {
+  if (props.hasMultipleImages) {
     // Remove specific file from queue
-    emit('remove-image', currentImageIndex.value)
+    emit('remove-image', props.currentImageIndex)
   } else {
     // Remove the only file and reset app
     clearSelection()
@@ -506,26 +506,25 @@ const resetEverything = () => {
           </div>
         </div>
       </div>      <!-- File Selected Display -->
-      <div v-if="selectedFile" class="file-selected">
-        <!-- File Queue Navigation (only show if multiple files) -->
-        <div v-if="hasMultipleImages" class="file-queue-nav">
+      <div v-if="selectedFile" class="file-selected">        <!-- File Queue Navigation (only show if multiple files) -->
+        <div v-if="props.hasMultipleImages" class="file-queue-nav">
           <div class="queue-info">
-            <span class="current-file">{{ currentImageIndex + 1 }} of {{ imageQueue.length }}</span>
+            <span class="current-file">{{ props.currentImageIndex + 1 }} of {{ props.imageQueue.length }}</span>
             <span class="file-name">{{ selectedFile?.name || 'Unknown' }}</span>
           </div>
           <div class="queue-controls">
             <button
               class="nav-btn"
-              :disabled="currentImageIndex === 0"
-              @click="emit('switch-image', currentImageIndex - 1)"
+              :disabled="props.currentImageIndex === 0"
+              @click="emit('switch-image', props.currentImageIndex - 1)"
               title="Previous image"
             >
               <ChevronLeft class="nav-icon" />
             </button>
             <button
               class="nav-btn"
-              :disabled="currentImageIndex >= imageQueue.length - 1"
-              @click="emit('switch-image', currentImageIndex + 1)"
+              :disabled="props.currentImageIndex >= props.imageQueue.length - 1"
+              @click="emit('switch-image', props.currentImageIndex + 1)"
               title="Next image"
             >
               <ChevronRight class="nav-icon" />
@@ -561,20 +560,18 @@ const resetEverything = () => {
           >
             <X class="action-icon" />
           </button>
-        </div>
-
-        <!-- Batch Processing Controls (only show if multiple files) -->
-        <div v-if="hasMultipleImages" class="batch-controls">
+        </div>        <!-- Batch Processing Controls (only show if multiple files) -->
+        <div v-if="props.hasMultipleImages" class="batch-controls">
           <div class="batch-actions">
             <button
               class="batch-btn convert-all-btn"
               @click="emit('batch-convert')"
-              :disabled="batchProcessing"
+              :disabled="props.batchProcessing"
               title="Convert all images to SVG"
             >
-              <Zap v-if="!batchProcessing" class="batch-icon" />
+              <Zap v-if="!props.batchProcessing" class="batch-icon" />
               <Loader v-else class="batch-icon loading" />
-              <span>{{ batchProcessing ? 'Converting...' : 'Convert All' }}</span>
+              <span>{{ props.batchProcessing ? 'Converting...' : 'Convert All' }}</span>
             </button>
             
             <div class="download-group">
