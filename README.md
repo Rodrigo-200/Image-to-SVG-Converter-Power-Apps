@@ -22,7 +22,7 @@ A professional Vue.js web application that converts images to SVG format specifi
 ### Image Processing
 - **Multiple Input Methods**: File upload, clipboard paste, URL input, camera capture
 - **Batch Processing**: Upload and convert multiple images simultaneously
-- **Format Support**: JPG, PNG, GIF, WEBP, BMP
+- **Format Support**: JPG, PNG, GIF, WEBP, BMP (max 10MB)
 - **Real-time Preview**: Live preview with instant settings updates
 - **🆕 Precise Border Removal**: Automatic whitespace removal with pixel-perfect cropping
 

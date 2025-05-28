@@ -12,9 +12,18 @@ const isAnimating = ref(false)
 const showSuccess = ref(false)
 
 const acceptedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp']
+const maxFileSize = 10 * 1024 * 1024 // 10MB in bytes
 
 const isValidFile = (file) => {
-  return file && acceptedTypes.includes(file.type)
+  if (!file || !acceptedTypes.includes(file.type)) {
+    return { valid: false, error: 'Invalid file type. Please select a valid image file (JPG, PNG, GIF, WEBP, BMP)' }
+  }
+  
+  if (file.size > maxFileSize) {
+    return { valid: false, error: `File size exceeds 10MB limit. Current size: ${formatFileSize(file.size)}` }
+  }
+  
+  return { valid: true }
 }
 
 // Watch for file changes to create/cleanup preview URL
@@ -44,7 +53,8 @@ onBeforeUnmount(() => {
 })
 
 const handleFileSelect = (file) => {
-  if (isValidFile(file)) {
+  const validation = isValidFile(file)
+  if (validation.valid) {
     isAnimating.value = true
     setTimeout(() => {
       selectedFile.value = file
@@ -52,7 +62,7 @@ const handleFileSelect = (file) => {
       isAnimating.value = false
     }, 300)
   } else {
-    alert('Please select a valid image file (JPG, PNG, GIF, WEBP, BMP)')
+    alert(validation.error)
   }
 }
 
@@ -129,9 +139,9 @@ const formatFileSize = (bytes) => {
           <Sparkles v-if="showSuccess" class="success-sparkles" />
         </div>
         <h3>Drag & drop your image here</h3>
-        <p>or <span class="link-text">click to browse</span></p>
-        <div class="supported-formats">
+        <p>or <span class="link-text">click to browse</span></p>        <div class="supported-formats">
           <small>Supported formats: JPG, PNG, GIF, WEBP, BMP</small>
+          <small class="size-limit">Maximum file size: 10MB</small>
         </div>
       </div>
       
@@ -293,6 +303,12 @@ const formatFileSize = (bytes) => {
 .supported-formats {
   color: var(--text-muted);
   margin-top: 1rem;
+}
+
+.supported-formats .size-limit {
+  display: block;
+  margin-top: 0.25rem;
+  opacity: 0.8;
 }
 
 .file-selected {
