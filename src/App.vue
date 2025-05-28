@@ -1,19 +1,26 @@
 <script setup>
-import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted, nextTick } from 'vue'
 import UnifiedImageInput from './components/UnifiedImageInput.vue'
 import PreviewArea from './components/PreviewArea.vue'
 import ControlsPanel from './components/ControlsPanel.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
+import MobileActionBar from './components/MobileActionBar.vue'
 import { useImageConversion } from './composables/useImageConversion.js'
-import { Settings, Download, Palette, Maximize2, ChevronUp, ChevronDown, Minimize2, Sparkles, Image, RefreshCw, FileCode, Zap, Grid3X3, Layers, Smartphone, Sparkle, Box, Wifi, WifiOff, Globe, Scale } from 'lucide-vue-next'
+import { Download, Palette, Sparkles, Image, Zap, Smartphone, Box, Wifi, WifiOff } from 'lucide-vue-next'
 import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
+import { debounce, throttle, getOptimalProcessingSettings, PerformanceMonitor } from './utils/performance.js'
 
 // Application state
 const currentImage = ref(null)
 const imageQueue = ref([]) // New: Array to hold multiple images
 const currentImageIndex = ref(0) // New: Current image being viewed/processed
 const showWelcome = ref(true)
+
+// Performance optimization
+const perfSettings = getOptimalProcessingSettings()
+const isProcessingOptimized = ref(false)
+let currentOperation = null
 
 const settings = reactive({
   removeBorder: true,
@@ -58,24 +65,50 @@ const currentImageData = computed(() => {
 })
 
 // Watch for settings changes to update live preview (but don't update for color changes if we have SVG result)
-watch([() => settings.removeBorder, () => settings.size], () => {
-  if (currentImageFile.value) {
-    updateLivePreview(currentImageFile.value, settings)
+// Debounced version for better performance on mobile
+const debouncedUpdateLivePreview = debounce((imageFile, settings) => {
+  if (currentOperation) {
+    currentOperation.cancel()
   }
-})
+  
+  const monitor = new PerformanceMonitor('live-preview-update')
+  monitor.start()
+  
+  updateLivePreview(imageFile, settings).finally(() => {
+    monitor.end()
+  })
+}, perfSettings.debounceDelay)
 
-// Watch for color changes to update existing SVG
-watch(() => settings.svgColor, (newColor) => {
+watch([() => settings.removeBorder, () => settings.size], () => {
+  if (currentImageFile.value && !isProcessingOptimized.value) {
+    isProcessingOptimized.value = true
+    debouncedUpdateLivePreview(currentImageFile.value, settings)
+    // Reset flag after debounce delay + buffer
+    setTimeout(() => {
+      isProcessingOptimized.value = false
+    }, perfSettings.debounceDelay + 100)
+  }
+}, { flush: 'post' }) // Use post flush for better performance
+
+// Throttled color change handler for better performance
+const throttledColorChange = throttle((newColor) => {
   if (svgResult.value && newColor !== '#000000') {
     // Update existing SVG color without re-processing
     const updatedSvg = changeSvgColor(svgResult.value, newColor)
     // Note: we don't update svgResult here to avoid infinite loops
     // The preview will show the updated color
-  } else if (currentImageFile.value && !svgResult.value) {
+  } else if (currentImageFile.value && !svgResult.value && !isProcessingOptimized.value) {
     // Only update live preview if we don't have a final result yet
-    updateLivePreview(currentImageFile.value, settings)
+    isProcessingOptimized.value = true
+    debouncedUpdateLivePreview(currentImageFile.value, settings)
+    setTimeout(() => {
+      isProcessingOptimized.value = false
+    }, perfSettings.debounceDelay + 100)
   }
-})
+}, perfSettings.throttleLimit)
+
+// Watch for color changes to update existing SVG
+watch(() => settings.svgColor, throttledColorChange, { flush: 'post' })
 
 // Methods
 const handleImageSelected = (imageFileOrFiles) => {
@@ -104,10 +137,12 @@ const handleImageSelected = (imageFileOrFiles) => {
   currentImage.value = currentImageFile.value
   
   showWelcome.value = false
-  
-  // Start live preview for current image
+    // Start live preview for current image (optimized for mobile)
   if (currentImageFile.value) {
-    updateLivePreview(currentImageFile.value, settings)
+    // Use nextTick to ensure DOM is updated before processing
+    nextTick(() => {
+      debouncedUpdateLivePreview(currentImageFile.value, settings)
+    })
   }
 }
 
@@ -128,10 +163,11 @@ const removeImageFromQueue = (index) => {
       showWelcome.value = true
       currentImage.value = null
       svgResult.value = ''
-      livePreviewSvg.value = ''
-    } else if (currentImageFile.value) {
-      // Update preview for new current image
-      updateLivePreview(currentImageFile.value, settings)
+      livePreviewSvg.value = ''    } else if (currentImageFile.value) {
+      // Update preview for new current image (optimized)
+      nextTick(() => {
+        debouncedUpdateLivePreview(currentImageFile.value, settings)
+      })
     }
   }
 }
@@ -145,10 +181,12 @@ const switchToImage = (index) => {
     const imageData = imageQueue.value[index]
     if (imageData.svgResult) {
       svgResult.value = imageData.svgResult
-      livePreviewSvg.value = imageData.livePreview || ''
-    } else {
+      livePreviewSvg.value = imageData.livePreview || ''    } else {
       svgResult.value = ''
-      updateLivePreview(currentImageFile.value, settings)
+      // Use debounced update for switching images
+      nextTick(() => {
+        debouncedUpdateLivePreview(currentImageFile.value, settings)
+      })
     }
   }
 }
@@ -339,13 +377,8 @@ onMounted(() => {
   checkBackendConnection()
 })
 
-// Mobile UI state
-const mobileControlsExpanded = ref(false)
-const mobileActionBarCollapsed = ref(true) // Start collapsed by default
-const mobilePreviewExpanded = ref(true)
-const showScrollIndicator = ref(false)
-
 // Check if page is scrollable on mobile
+const showScrollIndicator = ref(false)
 const checkScrollable = () => {
   if (window.innerWidth <= 768) {
     const scrollHeight = document.documentElement.scrollHeight
@@ -565,146 +598,18 @@ onMounted(() => {
                 </button>
               </div>
             </div>
-          </div>          <!-- Mobile Action Bar - Beautiful New Design -->
-          <div class="mobile-action-bar" v-if="hasImage">
-            <!-- Main Action Buttons - Prominent Design -->
-            <div class="primary-actions">
-              <div class="action-buttons-container">
-                <!-- Convert Button - Takes 2/3 of space -->
-                <button 
-                  @click="convertToSvg" 
-                  class="convert-btn-new"
-                  :disabled="isProcessing"
-                  :class="{ processing: isProcessing }"
-                >
-                  <div class="btn-content-new">
-                    <div class="btn-icon-container">
-                      <component 
-                        :is="isProcessing ? 'div' : Settings" 
-                        class="btn-icon-new" 
-                        :class="{ spinning: isProcessing }" 
-                      />
-                    </div>
-                    <div class="btn-text-container">
-                      <span class="btn-text-main">
-                        {{ isProcessing ? 'Converting...' : 'Convert to SVG' }}
-                      </span>
-                      <span class="btn-text-sub" v-if="!isProcessing">
-                        {{ isBackendConnected ? 'High Quality' : 'Preview Mode' }}
-                      </span>
-                    </div>
-                  </div>
-                </button>
-                
-                <!-- Download Button - Slides in after conversion -->
-                <button 
-                  v-if="hasSvgResult && !isProcessing"
-                  @click="() => downloadSvg(svgResult, 'converted-image.svg')" 
-                  class="download-btn-new"
-                >
-                  <div class="btn-content-new">
-                    <div class="btn-icon-container">
-                      <Download class="btn-icon-new" />
-                    </div>
-                    <div class="btn-text-container">
-                      <span class="btn-text-main">Download</span>
-                      <span class="btn-text-sub">SVG File</span>
-                    </div>
-                  </div>
-                </button>
-              </div>
-            </div>
-
-            <!-- Expandable More Options -->
-            <div class="more-options-section">              <button 
-                @click="mobileActionBarCollapsed = !mobileActionBarCollapsed"
-                class="more-options-toggle"
-                :class="{ expanded: !mobileActionBarCollapsed }"
-              >
-                <Settings class="toggle-icon" />
-                <span class="toggle-text">{{ mobileActionBarCollapsed ? 'More options' : 'Hide options' }}</span>
-                <ChevronUp v-if="mobileActionBarCollapsed" class="chevron-icon" />
-                <ChevronDown v-else class="chevron-icon" />
-              </button>
-
-              <!-- Expandable Settings Panel -->
-              <div class="expandable-settings" :class="{ expanded: !mobileActionBarCollapsed }">
-                <div class="settings-content">
-                  <!-- Quality Settings -->
-                  <div class="setting-group">
-                    <label class="setting-title">Quality</label>
-                    <div class="quality-buttons-new">                      <button 
-                        v-for="option in [
-                          { value: 'low', label: 'Fast', icon: 'zap' },
-                          { value: 'medium', label: 'Balanced', icon: 'scale' },
-                          { value: 'high', label: 'High', icon: 'sparkles' }
-                        ]"
-                        :key="option.value"
-                        @click="Object.assign(settings, { quality: option.value })"
-                        class="quality-btn-new"
-                        :class="{ active: settings.quality === option.value }"
-                      >
-                        <span class="quality-icon">
-                          <Zap v-if="option.icon === 'zap'" class="quality-icon-svg" />
-                          <Scale v-else-if="option.icon === 'scale'" class="quality-icon-svg" />
-                          <Sparkles v-else-if="option.icon === 'sparkles'" class="quality-icon-svg" />
-                        </span>
-                        <span class="quality-label">{{ option.label }}</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <!-- Color Settings -->
-                  <div class="setting-group">
-                    <label class="setting-title">Colors</label>
-                    <div class="color-controls-new">
-                      <div class="color-item-new">
-                        <label class="color-label">Background</label>
-                        <div class="color-picker-new">
-                          <input 
-                            type="color" 
-                            :value="settings.backgroundColor" 
-                            @input="Object.assign(settings, { backgroundColor: $event.target.value })"
-                            class="color-input"
-                          />
-                          <div class="color-preview-new" :style="{ backgroundColor: settings.backgroundColor }"></div>
-                        </div>
-                      </div>
-                      <div class="color-item-new">
-                        <label class="color-label">SVG Color</label>
-                        <div class="color-picker-new">
-                          <input 
-                            type="color" 
-                            :value="settings.svgColor" 
-                            @input="Object.assign(settings, { svgColor: $event.target.value })"
-                            class="color-input"
-                          />
-                          <div class="color-preview-new" :style="{ backgroundColor: settings.svgColor }"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Processing Options -->
-                  <div class="setting-group">
-                    <label class="setting-title">Processing</label>
-                    <div class="toggle-options-new">
-                      <label class="toggle-option-new">
-                        <input 
-                          type="checkbox" 
-                          :checked="settings.removeBorder" 
-                          @change="Object.assign(settings, { removeBorder: $event.target.checked })"
-                          class="toggle-input"
-                        />
-                        <div class="toggle-slider-new"></div>
-                        <span class="toggle-text">Remove borders</span>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          </div>          <!-- Mobile Action Bar -->
+          <MobileActionBar
+            v-if="hasImage"
+            :has-image="hasImage"
+            :has-svg-result="hasSvgResult"
+            :is-processing="isProcessing"
+            :settings="settings"
+            :is-backend-connected="isBackendConnected"
+            @convert="convertToSvg"
+            @download="() => downloadSvg(svgResult, 'converted-image.svg')"
+            @update:settings="Object.assign(settings, $event)"
+          />
         </div>
       </div>
     </main>
@@ -1467,12 +1372,8 @@ onMounted(() => {
   height: 1.25rem;
 }
 
-/* Mobile Action Bar - Hidden by default */
-.mobile-action-bar {
-  display: none;
-}
-
-@media (max-width: 768px) {.app {
+@media (max-width: 768px) {
+  .app {
     min-height: 100vh;
     padding: 0;
     padding-bottom: 120px; /* Make room for mobile action bar */
@@ -1551,812 +1452,8 @@ onMounted(() => {
   /* Hide desktop controls panel on mobile */
   .controls-section {
     display: none;
-  }  /* Beautiful New Mobile Action Bar */
-  .mobile-action-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: rgba(255, 255, 255, 0.95);
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(20px);
-    z-index: 150;
-    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.12);
   }
 
-  /* Primary Actions Section */
-  .primary-actions {
-    padding: 1rem;
-    padding-bottom: 0.75rem;
-  }
-
-  .action-buttons-container {
-    display: flex;
-    gap: 0.75rem;
-    height: 64px;
-  }
-
-  /* Convert Button - Prominent Design */
-  .convert-btn-new {
-    flex: 2.5;
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-    color: white;
-    border: none;
-    border-radius: 16px;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
-  }
-
-  .convert-btn-new:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.4);
-  }
-
-  .convert-btn-new:active:not(:disabled) {
-    transform: translateY(0);
-  }
-
-  .convert-btn-new:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-    transform: none;
-  }
-
-  .convert-btn-new.processing {
-    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
-  }
-
-  /* Download Button - Conditional Green Design */
-  .download-btn-new {
-    flex: 1.5;
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    color: white;
-    border: none;
-    border-radius: 16px;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    animation: slideInRight 0.4s ease-out;
-    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
-  }
-
-  .download-btn-new:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(16, 185, 129, 0.4);
-  }
-
-  .download-btn-new:active {
-    transform: translateY(0);
-  }
-
-  /* Button Content Layout */
-  .btn-content-new {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    height: 100%;
-    padding: 0 1rem;
-  }
-
-  .btn-icon-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-  }
-
-  .btn-icon-new {
-    width: 20px;
-    height: 20px;
-  }
-
-  .btn-text-container {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.125rem;
-  }
-
-  .btn-text-main {
-    font-size: 0.9rem;
-    font-weight: 600;
-    line-height: 1.2;
-  }
-
-  .btn-text-sub {
-    font-size: 0.75rem;
-    opacity: 0.9;
-    font-weight: 500;
-    line-height: 1;
-  }
-
-  /* More Options Section */
-  .more-options-section {
-    border-top: 1px solid rgba(0, 0, 0, 0.06);
-  }
-
-  .more-options-toggle {
-    width: 100%;
-    background: transparent;
-    border: none;
-    padding: 0.875rem 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-
-  .more-options-toggle:hover {
-    background: rgba(0, 0, 0, 0.03);
-    color: var(--primary-color);
-  }
-
-  .more-options-toggle.expanded {
-    color: var(--primary-color);
-    background: rgba(var(--primary-color-rgb), 0.05);
-  }
-
-  .toggle-icon {
-    width: 1rem;
-    height: 1rem;
-  }
-
-  .toggle-text {
-    font-weight: 500;
-  }  .chevron-icon {
-    width: 1rem;
-    height: 1rem;
-    transition: opacity 0.3s ease;
-  }
-
-  /* Expandable Settings */
-  .expandable-settings {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  .expandable-settings.expanded {
-    max-height: 500px;
-  }
-
-  .settings-content {
-    padding: 0 1rem 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  /* Setting Groups */
-  .setting-group {
-    background: rgba(248, 250, 252, 0.8);
-    border: 1px solid rgba(0, 0, 0, 0.06);
-    border-radius: 12px;
-    padding: 1rem;
-  }
-
-  .setting-title {
-    display: block;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.75rem;
-  }
-
-  /* Quality Buttons - New Design */
-  .quality-buttons-new {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.5rem;
-  }
-
-  .quality-btn-new {
-    background: white;
-    border: 1.5px solid rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
-    padding: 0.75rem 0.5rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.25rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    min-height: 64px;
-  }
-
-  .quality-btn-new:hover {
-    border-color: var(--primary-color);
-    background: rgba(var(--primary-color-rgb), 0.05);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-
-  .quality-btn-new.active {
-    border-color: var(--primary-color);
-    background: rgba(var(--primary-color-rgb), 0.1);
-    color: var(--primary-color);
-    box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.2);
-  }
-  .quality-icon {
-    font-size: 1.25rem;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .quality-icon-svg {
-    width: 1.25rem;
-    height: 1.25rem;
-    stroke-width: 2;
-  }
-
-  .quality-label {
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-align: center;
-  }
-
-  /* Color Controls - New Design */
-  .color-controls-new {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-  }
-
-  .color-item-new {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.625rem;
-  }
-
-  .color-label {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--text-secondary);
-  }
-
-  .color-picker-new {
-    position: relative;
-    width: 48px;
-    height: 48px;
-  }
-
-  .color-input {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    opacity: 0;
-  }
-
-  .color-preview-new {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    border: 3px solid white;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-    pointer-events: none;
-    transition: all 0.3s ease;
-  }
-
-  .color-picker-new:hover .color-preview-new {
-    transform: scale(1.1);
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
-  }
-
-  /* Toggle Options - New Design */
-  .toggle-options-new {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .toggle-option-new {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    cursor: pointer;
-  }
-
-  .toggle-input {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  .toggle-slider-new {
-    position: relative;
-    width: 48px;
-    height: 28px;
-    background: rgba(0, 0, 0, 0.15);
-    border-radius: 14px;
-    transition: all 0.3s ease;
-  }
-
-  .toggle-slider-new::after {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 24px;
-    height: 24px;
-    background: white;
-    border-radius: 50%;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    transition: all 0.3s ease;
-  }
-
-  .toggle-input:checked + .toggle-slider-new {
-    background: var(--primary-color);
-  }
-
-  .toggle-input:checked + .toggle-slider-new::after {
-    transform: translateX(20px);
-  }
-  .toggle-text {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--text-primary);
-  }
-
-  /* Animations */
-  @keyframes slideInRight {
-    from {
-      opacity: 0;
-      transform: translateX(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-
-}
-  /* Dark theme for mobile action bar */
-  [data-theme="dark"] .mobile-action-bar {
-    background: rgba(17, 24, 39, 0.98);
-    border-top-color: rgba(255, 255, 255, 0.1);
-  }
-
-/* Dark theme overrides for mobile */
-@media (max-width: 768px) {
-  [data-theme="dark"] .mobile-action-bar {
-    background: rgba(15, 23, 42, 0.95);
-    border-top-color: rgba(255, 255, 255, 0.1);
-  }
-
-  [data-theme="dark"] .setting-group {
-    background: rgba(255, 255, 255, 0.03);
-    border-color: rgba(255, 255, 255, 0.1);
-  }
-
-  [data-theme="dark"] .quality-btn-new {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.15);
-    color: rgba(255, 255, 255, 0.9);
-  }
-
-  [data-theme="dark"] .quality-btn-new:hover {
-    background: rgba(59, 130, 246, 0.1);
-    border-color: #3b82f6;
-  }
-
-  [data-theme="dark"] .quality-btn-new.active {
-    background: rgba(59, 130, 246, 0.15);
-    border-color: #3b82f6;
-    color: #3b82f6;
-  }
-  [data-theme="dark"] .more-options-toggle:hover {
-    background: rgba(255, 255, 255, 0.05);
-  }
-
-  [data-theme="dark"] .more-options-toggle.expanded {
-    background: rgba(59, 130, 246, 0.1);
-  }
-
-  /* Mobile tab adjustments */
-  .tabs {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 0.25rem;
-    margin-bottom: 1rem;
-  }
-
-  .tab {
-    padding: 0.75rem 0.5rem;
-    font-size: 0.875rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;  }
-
-  /* Mobile processing indicator - sticky and always visible */
-  .processing {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 200;
-    margin: 0;
-    padding: 1rem;
-    border-radius: 0;
-    border: none;
-    border-bottom: 1px solid var(--border-color);
-    background: var(--bg-primary);
-    backdrop-filter: blur(12px);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-    animation: slideInFromTop 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .progress-container {
-    max-width: calc(100vw - 2rem);
-    margin: 0 auto;
-    gap: 0.75rem;
-  }
-
-  .progress-bar {
-    height: 0.375rem;
-  }
-
-  .progress-text {
-    font-size: 0.8rem;
-    flex-direction: column;
-    gap: 0.25rem;
-    text-align: center;
-  }
-
-  .progress-label {
-    color: var(--text-primary);
-  }
-
-  .progress-percentage {
-    font-size: 0.875rem;
-    font-weight: 700;
-  }
-
-  /* Add top padding to main content when processing to prevent overlap */
-  .main-content.processing-active {
-    padding-top: 7rem;
-  }
-
-  /* Touch-friendly buttons */
-  button {
-    min-height: 44px;
-    min-width: 44px;
-  }
-
-  /* Better spacing for mobile */
-  .input-section .tab-content {
-    padding: 0.75rem;
-    background: var(--bg-secondary);
-    border-radius: var(--radius-medium);
-    border: 1px solid var(--border-color);
-  }
-
-  .input-section {
-    margin-bottom: 0.75rem;
-  }
-
-  .tabs {
-    margin-bottom: 0.75rem;
-  }
-
-  /* Mobile preview optimization */
-  .preview-section {
-    order: 1;
-  }
-
-  .input-section {
-    order: 2;
-  }
-
-  /* Hide mobile action bar when no image */
-  .mobile-action-bar {
-    display: block;
-  }
-
-  /* Scroll Indicator */
-.scroll-indicator {
-  position: absolute;
-  top: -8px;
-  right: 50%;
-  transform: translateX(50%);
-  display: flex;
-  gap: 4px;
-  pointer-events: none;
-}
-
-.scroll-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--primary-color);
-  animation: bounce 0.6s infinite alternate;
-}
-
-@keyframes bounce {
-  to {
-    transform: translateY(-4px);
-  }
-}
-
-/* Touch feedback for better mobile UX */
-.mobile-action-bar button:active {
-  transform: scale(0.98) translateY(0);
-}
-
-.color-picker-wrapper:active {
-  transform: scale(0.95);
-}
-
-/* Mobile Action Bar Styles - Ultra Compact */
-.mobile-actions {
-  padding: 0.5rem 0.75rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.quick-settings {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  flex-wrap: wrap;
-  padding: 0.375rem 0.5rem;
-  background: var(--bg-secondary);
-  border-radius: 0.25rem;
-  border: 1px solid var(--border-color);
-  opacity: 0.9;
-}
-
-.setting-group {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.1rem;
-  flex: 1;
-  min-width: 60px;
-}
-
-.setting-label {
-  font-size: 0.625rem;
-  color: var(--text-secondary);
-  font-weight: 500;
-  text-align: center;
-  line-height: 1;
-  opacity: 0.8;
-}
-
-.setting-toggle {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.1rem;
-  font-size: 0.625rem;
-  color: var(--text-secondary);
-  cursor: pointer;
-  line-height: 1;
-  opacity: 0.8;
-}
-
-.color-picker-wrapper {
-  position: relative;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 1.5px solid var(--border-color);
-  transition: all 0.2s ease;
-}
-
-.color-picker-wrapper:hover {
-  border-color: var(--primary-color);
-  transform: scale(1.05);
-}
-
-.mobile-color-input {
-  width: 100%;
-  height: 100%;
-  border: none;
-  background: none;
-  cursor: pointer;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-}
-
-.mobile-color-input::-webkit-color-swatch-wrapper {
-  padding: 0;
-}
-
-.mobile-color-input::-webkit-color-swatch {
-  border: none;
-  border-radius: 50%;
-}
-
-.mobile-checkbox {
-  width: 14px;
-  height: 14px;
-  margin: 0;
-  cursor: pointer;
-  accent-color: var(--primary-color);
-}
-
-.main-actions {
-  display: flex;
-  gap: 0.375rem;
-}
-
-.mobile-convert-btn, .mobile-download-btn {
-  flex: 1;
-  padding: 0.625rem 0.75rem;
-  border: none;
-  border-radius: 0.25rem;
-  font-weight: 600;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.25rem;
-  min-height: 38px;
-}
-
-.mobile-convert-btn {
-  background: var(--primary-color);
-  color: white;
-}
-
-.mobile-convert-btn:hover:not(:disabled) {
-  background: var(--primary-color-dark);
-  transform: translateY(-1px);
-}
-
-.mobile-convert-btn:disabled {
-  background: var(--border-color);
-  color: var(--text-secondary);
-  cursor: not-allowed;
-}
-
-.mobile-download-btn {
-  background: var(--success-color, #22c55e);
-  color: white;
-}
-
-.mobile-download-btn:hover {
-  background: var(--success-color-dark, #16a34a);
-  transform: translateY(-1px);
-}
-
-.btn-icon {
-  width: 0.9rem;
-  height: 0.9rem;
-  flex-shrink: 0;
-}
-
-/* Quality Settings for Mobile - Ultra Compact */
-.mobile-quality-selector {
-  display: flex;
-  gap: 0.25rem;
-  margin: 0.125rem 0;
-}
-
-.mobile-quality-btn {
-  flex: 1;
-  padding: 0.25rem 0.375rem;
-  border: 1px solid var(--border-color);
-  background: var(--bg-secondary);
-  color: var(--text-secondary);
-  border-radius: 0.1875rem;
-  font-size: 0.625rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-weight: 500;
-}
-
-.mobile-quality-btn.active {
-  background: var(--primary-color);
-  color: white;
-  border-color: var(--primary-color);
-}
-
-.mobile-quality-btn:hover:not(.active) {
-  background: var(--bg-tertiary);
-  border-color: var(--primary-color);
-}
-
-/* Collapsible Mobile Action Bar */
-.action-bar-handle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border-color);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  user-select: none;
-}
-
-.action-bar-handle:hover {
-  background: var(--bg-tertiary);
-}
-
-.action-bar-handle:active {
-  transform: scale(0.98);
-}
-
-.handle-indicator {
-  width: 32px;
-  height: 3px;
-  background: var(--text-secondary);
-  border-radius: 1.5px;
-  opacity: 0.6;
-  transition: all 0.3s ease;
-}
-
-.action-bar-handle:hover .handle-indicator {
-  opacity: 1;
-  background: var(--primary-color);
-}
-
-.handle-icon {
-  width: 1rem;
-  height: 1rem;
-  color: var(--text-secondary);
-  transition: all 0.3s ease;
-}
-
-.action-bar-handle:hover .handle-icon {
-  color: var(--primary-color);
-}
-
-.handle-text {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.action-bar-handle:hover .handle-text {
-  color: var(--primary-color);
-}
-
-.mobile-actions {
-  max-height: 200px;
-  overflow: hidden;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.mobile-actions.hidden {
-  max-height: 0;
-  opacity: 0;
-  transform: translateY(-10px);
-}
-
-.mobile-action-bar.collapsed {
-  transform: translateY(0);
-}
-
-.mobile-action-bar.collapsed .action-bar-handle {
-  border-bottom: none;
 }
 
 /* Responsive Design for Hero Section */
@@ -2504,10 +1601,8 @@ onMounted(() => {
     gap: 0.125rem;
   }
   
-  
   .header-controls {
     gap: 0.5rem;
   }
-}
 }
 </style>

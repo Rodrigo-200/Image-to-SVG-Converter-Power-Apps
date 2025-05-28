@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
-import { Upload, FileImage, X, Clipboard, Link, Loader, CheckCircle, AlertCircle, Camera, Sparkles, RotateCcw, ChevronLeft, ChevronRight, Download, Archive, Zap } from 'lucide-vue-next'
+import { Upload, FileImage, X, Clipboard, Link, Loader, CheckCircle, AlertCircle, Camera, Sparkles, RotateCcw, ChevronLeft, ChevronRight, Zap } from 'lucide-vue-next'
 
 const emit = defineEmits(['image-selected', 'reset-app', 'remove-image', 'switch-image', 'batch-convert', 'download-all', 'download-zip'])
 
@@ -1262,6 +1262,8 @@ p {
   overflow: hidden;
   text-overflow: ellipsis;
   flex: 1;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .file-counter {
@@ -1619,9 +1621,19 @@ p {
     width: 1.5rem;
     height: 1.5rem;
   }
-  
-  .file-name {
+    .file-name {
     font-size: 0.9rem;
+    max-width: calc(100vw - 8rem); /* Account for preview image, counter, and padding */
+  }
+  
+  .file-name-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .file-counter {
+    align-self: flex-end;
   }
     .file-meta {
     font-size: 0.75rem;

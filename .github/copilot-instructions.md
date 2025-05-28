@@ -135,6 +135,62 @@ src/
 
 ## Recent Improvements & Standards
 
+### Version Management & Changelog
+Follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html) and [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) standards:
+
+**Version Numbering:**
+- **MAJOR** (x.0.0): Breaking changes that require user action
+- **MINOR** (x.y.0): New features that are backward compatible
+- **PATCH** (x.y.z): Bug fixes that are backward compatible
+
+**Changelog Format:**
+```markdown
+## [1.5.0] - 2024-12-19
+### Added
+- New feature descriptions
+### Changed
+- Modifications to existing features
+### Removed
+- Removed features or files
+### Fixed
+- Bug fixes and corrections
+```
+
+**Always Update When Making Changes:**
+1. Increment version in `package.json`
+2. Add detailed entry to `CHANGELOG.md` 
+3. Include all completed changes in the session
+4. Specify migration notes if needed
+5. Update README.md version badge if major/minor
+
+### Completed Changes Tracking
+**v1.5.0 (Current) - Production Optimization Release:**
+- ✅ System dark mode theme consistency fix
+- ✅ Mobile action bar responsive design (desktop hidden)
+- ✅ Bundle size optimization with tree-shaking
+- ✅ Icon import optimization across all components
+- ✅ Dead code removal (4 unused files)
+- ✅ Production build validation and testing
+- ✅ CHANGELOG.md creation with semantic versioning
+- ✅ README.md cleanup and modernization
+- ✅ Copilot instructions enhancement for version tracking
+
+**v1.4.0 - Project Cleanup:**
+- ✅ Comprehensive optimization and cleanup
+- ✅ Advanced icon import optimization
+- ✅ Production build validation
+
+**v1.3.3 - Border Removal Enhancement:**
+- ✅ Pixel-perfect border removal with visual feedback
+- ✅ Smart canvas analysis for border detection
+- ✅ Orange highlighting overlay for detected borders
+
+**v1.3.0 - Batch Processing:**
+- ✅ Multiple image upload and processing
+- ✅ File queue navigation controls
+- ✅ ZIP download for batch operations
+- ✅ Mobile-responsive batch controls
+
 ### Icon Implementation Pattern
 When replacing emojis with Lucide icons:
 ```vue

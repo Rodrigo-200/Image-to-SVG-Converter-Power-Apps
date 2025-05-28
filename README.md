@@ -1,272 +1,173 @@
 # Image to SVG Converter for Power Apps
 
-A professional Vue.js web application that converts images to SVG format specifically optimized for Microsoft Power Apps. Features precise border removal, batch processing, real-time preview, and a responsive mobile-friendly interface.
+A professional Vue.js web application that converts images to SVG format specifically optimized for Microsoft Power Apps. Features real-time preview, batch processing, responsive design, and production-ready optimization.
 
 ![Vue.js](https://img.shields.io/badge/Vue.js-3.5-4FC08D?style=flat-square&logo=vue.js&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-6.0-646CFF?style=flat-square&logo=vite&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-Backend-339933?style=flat-square&logo=node.js&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.5.0-blue?style=flat-square)
 
-**[Live Demo](https://image-to-svg-converter-power-apps-amanj0hib.vercel.app/)**
+**[🚀 Live Demo](https://image-to-svg-converter-power-apps.vercel.app/)**
 
-## ✨ Latest Updates (v1.3.3)
+## ✨ Key Features
 
-### 🎯 **Precise Border Removal** - FIXED!
-- **Pixel-Perfect Cropping**: Downloaded SVGs are now actually cropped to remove detected borders
-- **Visual Feedback**: Orange highlighting shows exactly what will be removed
-- **Power Apps Ready**: No more manual editing required - SVGs fit perfectly in controls
-- **Smart Detection**: Advanced canvas analysis detects borders with 220 brightness threshold
+- **🎯 Power Apps Optimized**: Clean SVG output ready for Microsoft Power Apps controls
+- **📱 Responsive Design**: Works perfectly on desktop, tablet, and mobile (768px breakpoint)
+- **🔄 Batch Processing**: Upload and convert multiple images simultaneously
+- **⚡ Real-time Preview**: Instant visual feedback as you adjust settings
+- **🎨 Smart Border Removal**: Automatic whitespace detection and pixel-perfect cropping
+- **🌓 Theme Support**: Dark/light mode with system preference detection
+- **📦 Production Ready**: Optimized bundle size (234KB) with tree-shaking
 
-## Features
+## 🚀 Quick Start
 
-### Image Processing
-- **Multiple Input Methods**: File upload, clipboard paste, URL input, camera capture
-- **Batch Processing**: Upload and convert multiple images simultaneously
-- **Format Support**: JPG, PNG, GIF, WEBP, BMP (max 1GB)
-- **Real-time Preview**: Live preview with instant settings updates
-- **🆕 Precise Border Removal**: Automatic whitespace removal with pixel-perfect cropping
-
-### Power Apps Optimization
-- **Clean SVG Output**: Optimized code for Power Apps controls
-- **Size Presets**: Pre-configured sizes for small, medium, and large controls
-- **Color Conversion**: Single-color conversion for icon usage
-- **Minimal File Size**: Compressed SVG output for better app performance
-- **🆕 Perfect Fit**: SVGs automatically sized for Power Apps controls
-
-### User Experience
-- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile
-- **Dark/Light Theme**: Theme toggle with system preference detection
-- **Progress Indicators**: Visual feedback for conversion processes
-- **Error Handling**: Comprehensive error messages and recovery options
-
-## Quick Start
+### Prerequisites
+- Node.js 18+ and npm
 
 ### Local Development
-
-**Prerequisites:** Node.js 18+ and npm
-
 ```bash
-# Clone repository
+# Clone and install
 git clone <repository-url>
 cd image-to-svg-converter-power-apps
-
-# Install dependencies
 npm install
 
-# Start full development environment (frontend + backend)
+# Start development (frontend + backend)
 npm run dev:full
 
-# Or start services individually
-npm run server  # Backend on port 3001
-npm run dev     # Frontend on port 5173
+# Or start individually
+npm run server  # Backend (port 3001)
+npm run dev     # Frontend (port 5173)
 ```
 
-Visit `http://localhost:5173` to access the application.
+Visit `http://localhost:5173` to use the application.
 
-### Production Deployment
-
-#### Deploy to Vercel
-
-**Automated Deployment:**
+### Production Build
 ```bash
-# Windows
-./DEPLOY-NOW.bat
-
-# Linux/macOS
-chmod +x deploy.sh
-./deploy.sh
+npm run build    # Build for production
+npm run preview  # Preview production build
 ```
 
-**Manual Deployment:**
-```bash
-# Install Vercel CLI
-npm install -g vercel
+## 📖 Usage
 
-# Deploy
-vercel --prod
-```
+1. **Upload**: Drag & drop images or use file picker (supports JPG, PNG, GIF, WEBP, BMP)
+2. **Configure**: Adjust border removal, colors, and quality settings
+3. **Preview**: See real-time changes with visual border detection
+4. **Convert**: Generate optimized SVG files
+5. **Download**: Save individual files or batch download as ZIP
 
-## Usage Guide
+### Input Methods
+- 📁 File upload with drag & drop
+- 📋 Clipboard paste (Ctrl+V)
+- 🔗 URL input for remote images
+- 📷 Camera capture (mobile devices)
 
-### Basic Conversion
-1. **Upload Images**: Drag and drop or click to select one or multiple image files
-2. **Adjust Settings**: Configure border removal, color, and size options
-3. **Preview**: Use the real-time preview to see changes instantly
-4. **Convert**: Click "Convert to SVG" for high-quality processing
-5. **Download**: Save your optimized SVG files
-
-### Batch Processing
-- Select multiple files during upload
-- Navigate between images using the file queue controls
-- Each image maintains its own settings and conversion state
-- Remove individual images from the queue as needed
-
-### Advanced Features
-- **Live Preview**: See changes in real-time as you adjust settings
-- **Border Detection**: Visual overlay shows detected borders before removal
-- **Color Customization**: Convert to single-color SVGs for icon usage
-- **Background Testing**: Change preview background to test SVG visibility
-
-## Technical Architecture
+## 🏗️ Technical Stack
 
 ### Frontend
-- **Vue.js 3**: Composition API with modern reactive patterns
+- **Vue.js 3**: Composition API with `<script setup>`
 - **Vite**: Fast build tool and development server
-- **Lucide Vue**: Consistent icon system
-- **CSS Grid/Flexbox**: Modern responsive layouts
+- **Lucide Vue**: Consistent icon system (no emojis)
+- **Modern CSS**: Grid, Flexbox, custom properties
 
 ### Backend (Optional)
-- **Node.js**: High-quality SVG conversion endpoint
-- **Express**: Lightweight server framework
-- **Sharp/Canvas**: Advanced image processing capabilities
+- **Node.js + Express**: High-quality conversion endpoint
+- **Sharp/Canvas**: Advanced image processing
 
-### File Structure
+### Build Optimization
+- **Tree-shaking**: Optimized imports for minimal bundle size
+- **Code splitting**: Efficient loading and caching
+- **Production ready**: Tested builds with no errors
+
+## 📁 Project Structure
+
 ```
 src/
 ├── components/
 │   ├── UnifiedImageInput.vue    # File upload and input handling
 │   ├── PreviewArea.vue          # Image preview and file queue
 │   ├── ControlsPanel.vue        # Conversion settings
+│   ├── MobileActionBar.vue      # Mobile-only bottom controls
 │   └── ThemeToggle.vue          # Theme management
 ├── composables/
-│   ├── useImageConversion.js    # Core conversion logic
-│   └── useClipboard.js          # Clipboard functionality
+│   └── useImageConversion.js    # Core conversion logic
 └── utils/
     ├── svgOptimizer.js          # SVG optimization
-    └── powerAppsHelpers.js      # Power Apps utilities
+    └── performance.js           # Performance monitoring
 ```
 
-## Configuration
+## 🌐 Deployment
+
+### Vercel (Recommended)
+```bash
+npm install -g vercel
+vercel --prod
+```
+
+### Manual Deployment
+Upload the `dist/` folder contents to any static hosting service.
+
+## 📝 Configuration
 
 ### Environment Variables
 ```bash
 # Optional: Custom backend URL
 VITE_BACKEND_URL=http://localhost:3001
-
-# Optional: Analytics
-VITE_ANALYTICS_ID=your-analytics-id
 ```
 
 ### Development Commands
-```bash
-npm run dev          # Frontend development server
-npm run server       # Backend development server  
-npm run dev:full     # Both frontend and backend
-npm run build        # Production build
-npm run preview      # Preview production build
-npm run test         # Run test suite
-```
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Frontend development server |
+| `npm run server` | Backend development server |
+| `npm run dev:full` | Both frontend and backend |
+| `npm run build` | Production build |
+| `npm run preview` | Preview production build |
 
-## Browser Support
+## 🔧 Browser Support
 
-- **Chrome/Edge**: Full support with all features
-- **Firefox**: Full support with all features
-- **Safari**: Full support with all features
-- **Mobile Browsers**: Optimized responsive experience
+- ✅ Chrome/Edge: Full support
+- ✅ Firefox: Full support  
+- ✅ Safari: Full support
+- ✅ Mobile browsers: Optimized experience
 
-## Contributing
+## 📋 Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for detailed version history following [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format.
+
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Make your changes following the coding guidelines
-4. Test thoroughly on multiple devices and browsers
-5. Submit a pull request with a clear description
+2. Create feature branch: `git checkout -b feature-name`
+3. Follow coding guidelines in `.github/copilot-instructions.md`
+4. Test on multiple devices and screen sizes
+5. Submit pull request with clear description
 
 ### Development Guidelines
-- Use Vue 3 Composition API with `<script setup>` syntax
-- Follow the existing component structure and naming conventions
-- Ensure responsive design works on all screen sizes
-- Use Lucide Vue icons (no emojis in code)
-- Add appropriate error handling and user feedback
-- Test batch processing functionality thoroughly
+- Use Vue 3 Composition API
+- Follow 768px mobile breakpoint
+- Use Lucide Vue icons only
+- Ensure responsive design
+- Add proper error handling
+- Test batch processing thoroughly
 
-## License
+## 📄 License
 
 MIT License - see [LICENSE](LICENSE) file for details.
 
-## Support
+## 🔗 Links
 
-- **Issues**: [GitHub Issues](https://github.com/your-repo/issues)
-- **Documentation**: This README and inline code comments
-- **Community**: Discussions and feature requests welcome
-
----
-
-**Version 1.3.1** - Enhanced Batch Processing
-
-Latest features:
-- Complete batch processing implementation
-- File queue navigation with previous/next controls
-- Smart X button behavior (remove file vs reset app)
-- Download all files individually or as ZIP archive
-- Mobile-responsive batch controls
-- Enhanced error handling and progress tracking
-- Better error handling and user feedback
-
-
-
-### 📱 **Multiple Inputs**
-- File upload with drag & drop
-- Clipboard paste support
-- URL fetching capability
-- Camera capture on mobile
-
-</td>
-<td width="25%" align="center">
-
-### 🚀 **Power Apps Ready**
-- Optimized SVG output
-- Clean, minimal code
-- Perfect for icons
-- Professional graphics
-
-</td>
-<td width="25%" align="center">
-
-### 🎨 **Modern Experience**
-- Responsive design
-- Dark/light themes
-- Smooth animations
-- Professional icons
-
-</td>
-</tr>
-</table>
-
----
-
-## 📁 Project Structure
-
-```
-image-to-svg-converter-power-apps/
-├── src/                    # Vue.js application source
-│   ├── components/         # Vue components
-│   ├── composables/        # Vue composition functions
-│   └── utils/              # Utility functions
-├── api/                    # Vercel serverless functions
-├── docs/                   # Documentation and status reports
-├── tests/                  # Test files and validation tools
-├── server.js               # Local development server
-├── vercel.json             # Vercel deployment configuration
-└── package.json            # Dependencies and scripts
-```
-
-### Key Directories
-
-- **`src/`** - Main Vue.js application with components and logic
-- **`api/`** - Serverless functions for image processing on Vercel
-- **`docs/`** - Project documentation, testing guides, and status reports
-- **`tests/`** - Comprehensive testing suite with interactive validation tools
-- **`server.js`** - Local Express server for development with full Sharp processing
+- [📖 Documentation](README.md)
+- [🐛 Issues](https://github.com/yourusername/image-to-svg-converter-power-apps/issues)
+- [🎯 Live Demo](https://image-to-svg-converter-power-apps.vercel.app/)
+- [📋 Changelog](CHANGELOG.md)
 
 ---
 
 <div align="center">
 
-**🚀 Ready to create amazing SVG graphics for your Power Apps projects? Get started now! 🎨**
+**Ready to create amazing SVG graphics for your Power Apps projects? 🎨**
 
-[![Get Started](https://img.shields.io/badge/Get_Started-4FC08D?style=for-the-badge&logo=vue.js&logoColor=white)](#-quick-start)
-[![Documentation](https://img.shields.io/badge/Documentation-646CFF?style=for-the-badge&logo=vite&logoColor=white)](#-features)
-[![Contribute](https://img.shields.io/badge/Contribute-181717?style=for-the-badge&logo=github&logoColor=white)](#-contributing--development)
+[![Get Started](https://img.shields.io/badge/Get_Started-4FC08D?style=for-the-badge&logo=vue.js&logoColor=white)](https://image-to-svg-converter-power-apps.vercel.app/)
 
 </div>

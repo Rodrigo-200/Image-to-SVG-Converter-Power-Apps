@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch, onBeforeUnmount } from 'vue'
-import { Eye, EyeOff, RotateCcw, Zap, ChevronDown, ChevronUp, Diamond } from 'lucide-vue-next'
+import { Eye, EyeOff, RotateCcw, Zap, Diamond } from 'lucide-vue-next'
 
 const props = defineProps({
   image: {
