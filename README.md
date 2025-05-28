@@ -1,6 +1,6 @@
 # Image to SVG Converter for Power Apps
 
-A professional Vue.js web application that converts images to SVG format specifically optimized for Microsoft Power Apps. Features batch processing, real-time preview, and a responsive mobile-friendly interface.
+A professional Vue.js web application that converts images to SVG format specifically optimized for Microsoft Power Apps. Features precise border removal, batch processing, real-time preview, and a responsive mobile-friendly interface.
 
 ![Vue.js](https://img.shields.io/badge/Vue.js-3.5-4FC08D?style=flat-square&logo=vue.js&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-6.0-646CFF?style=flat-square&logo=vite&logoColor=white)
@@ -9,6 +9,14 @@ A professional Vue.js web application that converts images to SVG format specifi
 
 **[Live Demo](https://image-to-svg-converter-power-apps-amanj0hib.vercel.app/)**
 
+## ✨ Latest Updates (v1.3.3)
+
+### 🎯 **Precise Border Removal** - FIXED!
+- **Pixel-Perfect Cropping**: Downloaded SVGs are now actually cropped to remove detected borders
+- **Visual Feedback**: Orange highlighting shows exactly what will be removed
+- **Power Apps Ready**: No more manual editing required - SVGs fit perfectly in controls
+- **Smart Detection**: Advanced canvas analysis detects borders with 220 brightness threshold
+
 ## Features
 
 ### Image Processing
@@ -16,13 +24,14 @@ A professional Vue.js web application that converts images to SVG format specifi
 - **Batch Processing**: Upload and convert multiple images simultaneously
 - **Format Support**: JPG, PNG, GIF, WEBP, BMP
 - **Real-time Preview**: Live preview with instant settings updates
-- **Border Detection**: Automatic whitespace removal with visual feedback
+- **🆕 Precise Border Removal**: Automatic whitespace removal with pixel-perfect cropping
 
 ### Power Apps Optimization
 - **Clean SVG Output**: Optimized code for Power Apps controls
 - **Size Presets**: Pre-configured sizes for small, medium, and large controls
 - **Color Conversion**: Single-color conversion for icon usage
 - **Minimal File Size**: Compressed SVG output for better app performance
+- **🆕 Perfect Fit**: SVGs automatically sized for Power Apps controls
 
 ### User Experience
 - **Responsive Design**: Works seamlessly on desktop, tablet, and mobile
