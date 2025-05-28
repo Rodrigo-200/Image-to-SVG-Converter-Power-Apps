@@ -2,9 +2,9 @@
 
 ## Project Status: ✅ COMPLETE
 
-**Version**: 1.3.3  
+**Version**: 1.4.0  
 **Date**: May 28, 2025  
-**Latest Commit**: 47832ed  
+**Latest Commit**: e8c4914  
 
 ---
 
@@ -15,7 +15,7 @@
 **AFTER**: Pixel-perfect cropping using Sharp's extract() method with precise coordinates
 
 ### ✅ Enhanced Features Added
-- **File Size Validation**: 10MB limit with user-friendly error messages
+- **Large File Support**: 1GB file size limit (increased from 10MB)
 - **Visual Feedback**: Orange highlighting shows exactly what will be removed
 - **Progress Tracking**: Clear indicators during border detection and conversion
 - **Error Handling**: Robust fallbacks and comprehensive logging
@@ -23,8 +23,8 @@
 ### ✅ Technical Implementation
 - **Frontend**: Canvas-based border detection with 220 brightness threshold
 - **Backend**: Sharp image processing with pixel-precise extraction
-- **Validation**: File type and size checking before processing
-- **Testing**: Comprehensive test suite with 3/3 scenarios passing
+- **File Handling**: 1GB support in both local server and Vercel deployment
+- **Testing**: Comprehensive test suite with file size validation
 
 ---
 
@@ -33,7 +33,7 @@
 ### 🔧 Core Functionality
 - [x] **Border Removal**: Actually crops downloaded SVGs (FIXED!)
 - [x] **Multiple Input Methods**: Upload, paste, URL, camera
-- [x] **Format Support**: JPG, PNG, GIF, WEBP, BMP (max 10MB)
+- [x] **Format Support**: JPG, PNG, GIF, WEBP, BMP (max 1GB)
 - [x] **Power Apps Optimization**: Clean, minimal SVG output
 - [x] **Real-time Preview**: Live preview with instant feedback
 
@@ -61,18 +61,20 @@
 ## 📂 File Changes Summary
 
 ### Modified Files
-- `src/components/ImageUpload.vue` - Added file size validation and UI indicators
+- `src/components/ImageUpload.vue` - Added 1GB file size validation and UI indicators
 - `src/composables/useImageConversion.js` - Enhanced border detection algorithm
-- `server.js` - Implemented Sharp extract() for precise cropping
-- `api/convert-to-svg.js` - Vercel deployment with same cropping logic
-- `README.md` - Updated documentation with file size limits
-- `package.json` - Version bump to 1.3.3
+- `server.js` - Implemented Sharp extract() for precise cropping + 1GB file support
+- `api/convert-to-svg.js` - Vercel deployment with same cropping logic + 1GB support
+- `vercel.json` - Added 1GB body size limit configuration
+- `README.md` - Updated documentation with 1GB file size limits
+- `package.json` - Version bump to 1.4.0
 
 ### New Files
 - `BORDER_REMOVAL_TEST.md` - Testing documentation
 - `MISSION_ACCOMPLISHED.md` - Achievement report
 - `DEPLOYMENT_CHECKLIST.md` - Production readiness guide
 - `FINAL_STATUS.md` - This summary document
+- `test-file-size-limit.html` - 1GB file size testing interface
 - Test files: `comprehensive-test.js`, `test-border-removal.js`, etc.
 
 ---
