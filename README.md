@@ -235,6 +235,32 @@ Latest features:
 
 ---
 
+## 📁 Project Structure
+
+```
+image-to-svg-converter-power-apps/
+├── src/                    # Vue.js application source
+│   ├── components/         # Vue components
+│   ├── composables/        # Vue composition functions
+│   └── utils/              # Utility functions
+├── api/                    # Vercel serverless functions
+├── docs/                   # Documentation and status reports
+├── tests/                  # Test files and validation tools
+├── server.js               # Local development server
+├── vercel.json             # Vercel deployment configuration
+└── package.json            # Dependencies and scripts
+```
+
+### Key Directories
+
+- **`src/`** - Main Vue.js application with components and logic
+- **`api/`** - Serverless functions for image processing on Vercel
+- **`docs/`** - Project documentation, testing guides, and status reports
+- **`tests/`** - Comprehensive testing suite with interactive validation tools
+- **`server.js`** - Local Express server for development with full Sharp processing
+
+---
+
 <div align="center">
 
 **🚀 Ready to create amazing SVG graphics for your Power Apps projects? Get started now! 🎨**
