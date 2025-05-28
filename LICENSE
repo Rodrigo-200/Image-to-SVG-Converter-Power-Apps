@@ -1,21 +1,114 @@
-MIT License
+IMAGE TO SVG CONVERTER POWER APPS - EDUCATIONAL & PERSONAL USE LICENSE
 
-Copyright (c) 2025 Image to SVG Converter for Power Apps
+Copyright (c) 2025 Rodrigo Martins. All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+EDUCATIONAL AND PERSONAL USE LICENSE AGREEMENT
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+This software and associated documentation files (the "Software") are protected by copyright law and international treaties. By accessing, downloading, or using this Software, you agree to be bound by the terms of this license.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+1. GRANT OF LICENSE
+
+Subject to the terms and conditions of this Agreement, the copyright holder hereby grants you a limited, non-exclusive, non-transferable, revocable license to use the Software under the following conditions:
+
+1.1 PERMITTED USES
+You are permitted to:
+a) Use the Software for personal, non-commercial purposes
+b) Study the source code for educational and learning purposes
+c) Reference the Software in academic work, portfolios, and presentations with proper attribution
+d) Contribute improvements, bug fixes, or enhancements via pull requests to the original repository
+e) Use concepts and techniques learned from studying this code in your own original educational projects, provided you cite this work appropriately
+
+1.2 EDUCATIONAL PURPOSES
+Students and educators may:
+a) Examine the code structure and implementation patterns for learning purposes
+b) Reference the Software in academic curricula and coursework
+c) Discuss the technical approaches and methodologies used
+d) Use the Software as a reference for understanding modern web development practices
+
+2. RESTRICTIONS AND PROHIBITIONS
+
+You may NOT:
+a) Copy, reproduce, distribute, or redistribute the Software in whole or in substantial part
+b) Create derivative works based on the Software for distribution or commercial use
+c) Use the Software for commercial purposes without explicit written permission
+d) Remove, alter, or obscure any copyright notices, attribution, or license information
+e) Sublicense, sell, rent, lease, or otherwise transfer your rights under this license
+f) Create competing products or services that substantially replicate the Software's functionality
+g) Host the Software as a public service or distribute it as a standalone application
+h) Submit the Software or substantial portions thereof as your own original work in academic or professional contexts
+
+3. ATTRIBUTION REQUIREMENTS
+
+When referencing this Software, you must:
+a) Provide clear attribution to the original author
+b) Include a link to the original repository when possible
+c) Indicate if modifications were made to any referenced code
+d) Not imply endorsement by the original author of your derivative work
+
+Proper attribution format:
+"Based on/Inspired by Image to SVG Converter Power Apps by [Your Name] (https://github.com/Rodrigo-200/image-to-svg-converter-power-apps)"
+
+4. ACADEMIC INTEGRITY
+
+This license is designed to promote learning while maintaining academic integrity. Students using this Software for educational purposes must:
+a) Clearly cite the Software when referencing techniques or approaches
+b) Not submit the Software or substantial portions as original work
+c) Understand and apply the concepts rather than copying implementation
+d) Respect institutional policies regarding code reuse and attribution
+
+5. COMMERCIAL USE AND EXTENDED LICENSING
+
+For commercial use, extended rights, or permissions beyond this license, including but not limited to:
+- Commercial deployment or hosting
+- Integration into commercial products
+- White-label or OEM licensing
+- Removal of attribution requirements
+- Distribution rights
+
+Please contact rodrigo.contacme@manyme.com to discuss licensing terms.
+
+6. INTELLECTUAL PROPERTY
+
+a) The copyright holder retains all rights, title, and interest in and to the Software
+b) This license does not grant you any rights to trademarks, service marks, or trade names
+c) No patent rights are granted under this license
+d) All improvements or contributions submitted become part of the Software under the same license terms
+
+7. TERMINATION
+
+This license is effective until terminated. Your rights under this license will terminate automatically without notice if you fail to comply with any term. Upon termination, you must:
+a) Cease all use of the Software
+b) Delete or destroy all copies in your possession
+c) Remove any distributed derivative works that violate this license
+
+8. DISCLAIMER OF WARRANTIES
+
+THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. THE COPYRIGHT HOLDER MAKES NO WARRANTIES REGARDING THE ACCURACY, COMPLETENESS, OR PERFORMANCE OF THE SOFTWARE.
+
+9. LIMITATION OF LIABILITY
+
+IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. THIS LIMITATION APPLIES EVEN IF THE COPYRIGHT HOLDER HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+10. GENERAL PROVISIONS
+
+a) This Agreement constitutes the entire agreement between you and the copyright holder regarding the Software
+b) If any provision of this Agreement is held to be unenforceable, the remainder shall continue in full force and effect
+c) This Agreement shall be governed by the laws of [Your Jurisdiction], without regard to conflict of law principles
+d) Any disputes arising under this Agreement shall be resolved in the courts of [Your Jurisdiction]
+e) The copyright holder reserves the right to modify this license for future versions of the Software
+
+11. CONTACT INFORMATION
+
+For questions about this license, permissions, or commercial licensing:
+Email: rodrigo.contactme@manyme.com
+Repository: https://github.com/Rodrigo-200/image-to-svg-converter-power-apps
+
+ACKNOWLEDGMENT
+
+By using this Software, you acknowledge that you have read this Agreement, understand it, and agree to be bound by its terms and conditions.
+
+---
+
+This is an educational project created by a student to demonstrate modern web development skills and contribute to the developer community. The license aims to balance protecting the creator's intellectual property rights while encouraging learning and academic use.
+
+Last Updated: May 28, 2025

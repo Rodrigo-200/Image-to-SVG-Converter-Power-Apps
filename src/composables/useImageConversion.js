@@ -1,3 +1,21 @@
+/**
+ * Image to SVG Converter Power Apps - Image Conversion Composable
+ * Educational Project - Copyright (c) 2025 [Your Name]
+ * Licensed under Educational & Personal Use License - see LICENSE file
+ * 
+ * This composable demonstrates Vue.js composition patterns, reactive state management,
+ * image processing techniques, and modern JavaScript async/await patterns.
+ * 
+ * Key learning concepts:
+ * - Vue 3 Composition API and reactive references
+ * - Canvas-based image manipulation and processing
+ * - HTTP client patterns and error handling
+ * - Performance optimization and cancellable operations
+ * 
+ * Educational use encouraged with proper attribution.
+ * Commercial use requires explicit permission.
+ */
+
 import { ref } from 'vue'
 import { optimizeImageForProcessing, getOptimalProcessingSettings, createCancellableOperation, PerformanceMonitor } from '../utils/performance.js'
 

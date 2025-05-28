@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.2] - 2025-05-28
+### Added
+- **Educational & Personal Use License** to protect intellectual property while encouraging learning
+- Comprehensive legal framework designed specifically for student projects
+- Educational guidelines and attribution requirements in README
+- Student-friendly licensing terms with commercial options available
+- Copyright headers in key source files with educational context
+
+### Changed
+- **License**: Changed from MIT to Educational & Personal Use License for better IP protection
+- **Package.json**: Updated to reflect educational project status and new license
+- **README**: Enhanced with detailed educational content and usage guidelines
+- **Version**: Bumped to 1.5.2 to reflect licensing changes
+
+### Legal Protection
+- Clear restrictions on copying and commercial use without permission
+- Attribution requirements for academic and reference use
+- Commercial licensing pathway for extended rights
+- Academic integrity guidelines for students and educators
+
 ## [1.5.1] - 2025-05-28
 ### Fixed
 - Progress tracking bug where single image conversions from multiple-image queue incorrectly showed batch progress ("X of Y completed") instead of simple progress

@@ -1,3 +1,14 @@
+<!--
+  Image to SVG Converter Power Apps - Main Application Component
+  Educational Project - Copyright (c) 2025 [Your Name]
+  Licensed under Educational & Personal Use License - see LICENSE file
+  
+  This file demonstrates Vue.js 3 Composition API, reactive state management,
+  and modern web application architecture patterns.
+  
+  Unauthorized copying or commercial use is prohibited.
+  Educational use and contributions are encouraged with proper attribution.
+-->
 <script setup>
 import { ref, reactive, computed, watch, onMounted, nextTick } from 'vue'
 import UnifiedImageInput from './components/UnifiedImageInput.vue'

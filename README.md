@@ -1,12 +1,13 @@
 # Image to SVG Converter for Power Apps
 
-A professional Vue.js web application that converts images to SVG format specifically optimized for Microsoft Power Apps. Features real-time preview, batch processing, responsive design, and production-ready optimization.
+**🎓 Educational Project**: A professional Vue.js web application that converts images to SVG format specifically optimized for Microsoft Power Apps. Created by a student to demonstrate modern web development skills and contribute to the developer community.
 
 ![Vue.js](https://img.shields.io/badge/Vue.js-3.5-4FC08D?style=flat-square&logo=vue.js&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-6.0-646CFF?style=flat-square&logo=vite&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-Backend-339933?style=flat-square&logo=node.js&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)
-![Version](https://img.shields.io/badge/Version-1.5.1-blue?style=flat-square)
+![License](https://img.shields.io/badge/License-Educational-green.svg?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.5.2-blue?style=flat-square)
+![Student Project](https://img.shields.io/badge/Made%20by-Student-orange.svg?style=flat-square)
 
 **[🚀 Live Demo](https://image-to-svg-converter-power-apps.vercel.app/)**
 
@@ -151,9 +152,85 @@ See [CHANGELOG.md](CHANGELOG.md) for detailed version history following [Keep a 
 - Add proper error handling
 - Test batch processing thoroughly
 
-## 📄 License
+## 📚 For Students & Educators
 
-MIT License - see [LICENSE](LICENSE) file for details.
+### 🎓 What You Can Learn
+This project demonstrates modern web development practices perfect for educational purposes:
+
+- **Vue.js 3 Composition API** - Modern reactive framework patterns and component architecture
+- **Image Processing** - Canvas manipulation, file handling, and binary data processing
+- **Responsive Design** - Mobile-first approach with 768px breakpoint methodology
+- **Modern CSS** - Custom properties, Grid, Flexbox, and theme implementation
+- **Build Optimization** - Vite configuration, tree-shaking, and bundle analysis
+- **UX/UI Design** - Professional interface design and user experience principles
+- **Performance** - Debouncing, throttling, and optimization strategies
+- **State Management** - Reactive state patterns and data flow
+
+### 📖 Educational Use Guidelines
+
+#### ✅ **Encouraged Uses**
+- **Study the code structure** and learn implementation patterns
+- **Reference in academic work** with proper attribution
+- **Use concepts in your projects** while citing this work appropriately
+- **Contribute improvements** via pull requests to enhance your portfolio
+- **Discuss techniques** in interviews and academic presentations
+- **Learn framework patterns** for your own development skills
+
+#### 📝 **Proper Attribution Format**
+When referencing this project:
+```
+Based on techniques from "Image to SVG Converter Power Apps" by [Your Name]
+Repository: https://github.com/[username]/image-to-svg-converter-power-apps
+```
+
+#### 🎯 **Student-to-Student Note**
+As a fellow student, I encourage you to:
+- **Understand the "why"** behind implementation choices, not just the "how"
+- **Build your own version** with different features and approaches
+- **Ask questions** if concepts aren't clear - learning is collaborative!
+- **Share your improvements** - let's build a learning community
+
+#### 🏫 **For Educators**
+This project can serve as:
+- Reference material for Vue.js and modern JavaScript courses
+- Example of professional project structure and documentation
+- Case study for responsive design and mobile-first development
+- Demonstration of image processing in web applications
+
+## 📄 License & Usage Rights
+
+**⚠️ Educational & Personal Use License**: This project is protected by a custom license designed for educational purposes.
+
+### ✅ **What You CAN Do**
+- 📖 **Study the code** for educational and learning purposes
+- 🎓 **Reference in academic work** with proper attribution
+- 💻 **Use for personal projects** (non-commercial)
+- 🤝 **Contribute improvements** via pull requests
+- 💼 **Showcase in portfolios** with appropriate credit
+- 🗣️ **Discuss in interviews** and presentations
+
+### ❌ **What You CANNOT Do**
+- 🚫 **Copy entire project** and submit as your own work
+- 💰 **Use commercially** without explicit permission
+- 📤 **Redistribute** or create competing products
+- 🏷️ **Remove attribution** or copyright notices
+- 🌐 **Host publicly** without authorization
+- 📋 **Submit as coursework** without proper citation
+
+### 💼 **Commercial Licensing Available**
+For commercial use, extended rights, or special permissions:
+- 📧 **Email**: [your-email@domain.com]
+- 💬 **Affordable student-friendly options** available
+- 🤝 **Collaboration opportunities** for interesting projects
+
+**Full License**: See [LICENSE](LICENSE) file for complete legal terms.
+
+---
+
+### 🌟 **Made by a Student, for Students**
+This project represents hundreds of hours of learning, research, and development. While I encourage educational use and learning from the code, please respect the effort invested and use it responsibly.
+
+*Let's build and learn together! 🚀*
 
 ## 🔗 Links
 
