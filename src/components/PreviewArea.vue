@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch, onBeforeUnmount } from 'vue'
-import { Eye, EyeOff, RotateCcw, Zap, ChevronDown, ChevronUp } from 'lucide-vue-next'
+import { Eye, EyeOff, RotateCcw, Zap, ChevronDown, ChevronUp, Diamond } from 'lucide-vue-next'
 
 const props = defineProps({
   image: {
@@ -301,19 +301,14 @@ watch(showBorderPreview, async (show) => {
       
       <!-- Info Content -->
       <div class="info-content" :class="{ 'mobile-collapsed': !showInfoMobile }">
-        <div class="info-section">
-          <h4 class="desktop-title">{{ showOriginal ? 'Original' : 'SVG' }} Image</h4>
+        <div class="info-section">          <h4 class="desktop-title">{{ showOriginal ? 'Original' : 'SVG' }} Image</h4>
           <!-- Border removal info -->
-        <div v-if="removeBorder && !showOriginal && svgResult" class="border-info-message">
-          <span class="border-icon">🔶</span>
-          <span class="border-message-text">Orange highlighted areas show detected borders that were removed</span>
-        </div>
-        
-        <!-- Live preview border info -->
-        <div v-if="removeBorder && isLivePreview && !showOriginal" class="border-info-message">
-          <span class="border-icon">🔶</span>
-          <span class="border-message-text">Live preview: Orange areas show borders that will be removed</span>
-        </div>
+          <div v-if="removeBorder && !showOriginal && (svgResult || isLivePreview)" class="border-info-message">
+            <Diamond class="border-icon-svg" />
+            <span class="border-message-text">
+              {{ isLivePreview ? 'Live preview: Orange areas show borders that will be removed' : 'Orange highlighted areas show detected borders that were removed' }}
+            </span>
+          </div>
         
         <div class="info-details">
           <div v-if="image" class="info-item">
@@ -517,6 +512,20 @@ watch(showBorderPreview, async (show) => {
   .mobile-info-header {
     display: none !important;
   }
+  
+  .info-content {
+    max-height: none !important;
+    opacity: 1 !important;
+    margin-top: 0.5rem !important;
+    display: block !important;
+  }
+  
+  .info-content.mobile-collapsed {
+    max-height: none !important;
+    opacity: 1 !important;
+    margin-top: 0.5rem !important;
+    display: block !important;
+  }
 }
 
 .info-content {
@@ -547,6 +556,13 @@ watch(showBorderPreview, async (show) => {
 
 .border-icon {
   font-size: 1rem;
+}
+
+.border-icon-svg {
+  width: 1rem;
+  height: 1rem;
+  color: #ff9800;
+  stroke-width: 2;
 }
 
 .border-message-text {
@@ -808,9 +824,7 @@ watch(showBorderPreview, async (show) => {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-medium);
     padding: 0.75rem;
-  }
-  
-  .mobile-collapsed {
+  }  .mobile-collapsed {
     max-height: 0;
     margin-top: 0;
     opacity: 0;
