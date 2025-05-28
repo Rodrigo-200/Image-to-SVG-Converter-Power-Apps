@@ -6,6 +6,8 @@ import ControlsPanel from './components/ControlsPanel.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 import { useImageConversion } from './composables/useImageConversion.js'
 import { Settings, Download, Palette, Maximize2, ChevronUp, ChevronDown, Minimize2, Sparkles, Image, RefreshCw, FileCode, Zap, Grid3X3, Layers, Smartphone, Sparkle, Box, Wifi, WifiOff, Globe, Scale } from 'lucide-vue-next'
+import JSZip from 'jszip'
+import { saveAs } from 'file-saver'
 
 // Application state
 const currentImage = ref(null)
@@ -207,8 +209,125 @@ const convertToSvg = async () => {
     // Show a user-friendly message for backend unavailable
     if (error.message.includes('not available')) {
       alert('High-quality conversion requires the backend server. The live preview shows a simplified version of your image. To enable full conversion, run "npm run dev:full" in your terminal.')
+    }  }
+}
+
+// Batch processing methods
+const convertAllToSvg = async () => {
+  if (imageQueue.value.length === 0) return
+  
+  try {
+    isProcessing.value = true
+    processingProgress.value = 0
+    
+    const totalImages = imageQueue.value.length
+    let processedCount = 0
+    
+    for (let i = 0; i < imageQueue.value.length; i++) {
+      const imageData = imageQueue.value[i]
+      
+      try {
+        // Skip already processed images
+        if (imageData.processed && imageData.svgResult) {
+          processedCount++
+          processingProgress.value = Math.round((processedCount / totalImages) * 100)
+          continue
+        }
+        
+        // Mark as being processed
+        imageData.processed = false
+        imageData.error = null
+        
+        // Convert this image
+        await convertImageToSvg(imageData.file, {
+          removeBorder: settings.removeBorder,
+          svgColor: settings.svgColor === '#000000' ? null : settings.svgColor,
+          quality: settings.quality,
+          size: settings.size
+        })
+        
+        // Save the result
+        imageData.svgResult = svgResult.value
+        imageData.livePreview = livePreviewSvg.value
+        imageData.processed = true
+        
+        processedCount++
+        processingProgress.value = Math.round((processedCount / totalImages) * 100)
+        
+      } catch (error) {
+        console.error(`Error converting image ${i + 1}:`, error)
+        imageData.error = error.message
+        imageData.processed = false
+        processedCount++
+        processingProgress.value = Math.round((processedCount / totalImages) * 100)
+      }
     }
+    
+    // Update current image display if needed
+    if (currentImageData.value) {
+      svgResult.value = currentImageData.value.svgResult || ''
+      livePreviewSvg.value = currentImageData.value.livePreview || ''
+    }
+    
+  } catch (error) {
+    console.error('Error in batch conversion:', error)
+    alert('Error during batch conversion. Please try again.')
+  } finally {
+    isProcessing.value = false
+    processingProgress.value = 0
   }
+}
+
+const downloadAllSvg = () => {
+  const processedImages = imageQueue.value.filter(img => img.processed && img.svgResult)
+  
+  if (processedImages.length === 0) {
+    alert('No converted SVG files to download. Please convert your images first.')
+    return
+  }
+  
+  processedImages.forEach((imageData, index) => {
+    setTimeout(() => {
+      const blob = new Blob([imageData.svgResult], { type: 'image/svg+xml' })
+      const fileName = `${getFileNameWithoutExtension(imageData.file.name)}.svg`
+      saveAs(blob, fileName)
+    }, index * 200) // Stagger downloads to avoid browser blocking
+  })
+}
+
+const downloadAllAsZip = async () => {
+  const processedImages = imageQueue.value.filter(img => img.processed && img.svgResult)
+  
+  if (processedImages.length === 0) {
+    alert('No converted SVG files to download. Please convert your images first.')
+    return
+  }
+  
+  try {
+    const zip = new JSZip()
+    
+    // Add each SVG file to the ZIP
+    processedImages.forEach((imageData) => {
+      const fileName = `${getFileNameWithoutExtension(imageData.file.name)}.svg`
+      zip.file(fileName, imageData.svgResult)
+    })
+    
+    // Generate the ZIP file
+    const content = await zip.generateAsync({ type: 'blob' })
+    
+    // Download the ZIP file
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
+    saveAs(content, `converted-svgs-${timestamp}.zip`)
+    
+  } catch (error) {
+    console.error('Error creating ZIP:', error)
+    alert('Error creating ZIP file. Files will be downloaded individually instead.')
+    downloadAllSvg()
+  }
+}
+
+const getFileNameWithoutExtension = (fileName) => {
+  return fileName.replace(/\.[^/.]+$/, '')
 }
 
 // Check backend connection on app startup
@@ -360,6 +479,15 @@ onMounted(() => {
           <UnifiedImageInput 
             @image-selected="handleImageSelected" 
             @reset-app="handleAppReset"
+            @remove-image="removeImageFromQueue"
+            @switch-image="switchToImage"
+            @batch-convert="convertAllToSvg"
+            @download-all="downloadAllSvg"
+            @download-zip="downloadAllAsZip"
+            :image-queue="imageQueue"
+            :current-image-index="currentImageIndex"
+            :has-multiple-images="hasMultipleImages"
+            :batch-processing="isProcessing"
           />
         </section><!-- Modern Loading Modal -->
         <div v-if="isProcessing" class="loading-overlay">

@@ -1,13 +1,40 @@
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
-import { Upload, FileImage, X, Clipboard, Link, Loader, CheckCircle, AlertCircle, Camera, Sparkles, RotateCcw } from 'lucide-vue-next'
+import { Upload, FileImage, X, Clipboard, Link, Loader, CheckCircle, AlertCircle, Camera, Sparkles, RotateCcw, ChevronLeft, ChevronRight, Download, Archive, Zap } from 'lucide-vue-next'
 
-const emit = defineEmits(['image-selected', 'reset-app'])
+const emit = defineEmits(['image-selected', 'reset-app', 'remove-image', 'switch-image', 'batch-convert', 'download-all', 'download-zip'])
+
+const props = defineProps({
+  // Batch processing props
+  imageQueue: {
+    type: Array,
+    default: () => []
+  },
+  currentImageIndex: {
+    type: Number,
+    default: 0
+  },
+  hasMultipleImages: {
+    type: Boolean,
+    default: false
+  },
+  batchProcessing: {
+    type: Boolean,
+    default: false
+  }
+})
 
 // State management
 const activeMethod = ref('upload')
 const dragActive = ref(false)
-const selectedFile = ref(null)
+const selectedFile = computed(() => {
+  // Use current image from props if available, otherwise use local state
+  if (props.imageQueue.length > 0 && props.currentImageIndex < props.imageQueue.length) {
+    return props.imageQueue[props.currentImageIndex].file
+  }
+  return localSelectedFile.value
+})
+const localSelectedFile = ref(null)
 const previewUrl = ref(null)
 const isAnimating = ref(false)
 const showSuccessAnimation = ref(false)
@@ -61,7 +88,7 @@ watch(selectedFile, (newFile, oldFile) => {
     URL.revokeObjectURL(previewUrl.value)
     previewUrl.value = null
   }
-    if (newFile) {
+  if (newFile) {
     previewUrl.value = URL.createObjectURL(newFile)
     showSuccessAnimationEffect()
   }
@@ -98,8 +125,8 @@ const handleFileSelect = (fileOrFiles) => {
   
   isAnimating.value = true
   setTimeout(() => {
-    // For preview, use the first valid file
-    selectedFile.value = validFiles[0]
+    // For local preview, use the first valid file
+    localSelectedFile.value = validFiles[0]
     // Emit all valid files (single file or array)
     emit('image-selected', validFiles.length === 1 ? validFiles[0] : validFiles)
     isAnimating.value = false
@@ -266,8 +293,18 @@ onBeforeUnmount(() => {
 })
 
 // Utility functions
+const handleRemoveFile = () => {
+  if (hasMultipleImages.value) {
+    // Remove specific file from queue
+    emit('remove-image', currentImageIndex.value)
+  } else {
+    // Remove the only file and reset app
+    clearSelection()
+  }
+}
+
 const clearSelection = () => {
-  selectedFile.value = null
+  localSelectedFile.value = null
   imageUrl.value = ''
   urlError.value = ''
   showError.value = false
@@ -470,6 +507,32 @@ const resetEverything = () => {
         </div>
       </div>      <!-- File Selected Display -->
       <div v-if="selectedFile" class="file-selected">
+        <!-- File Queue Navigation (only show if multiple files) -->
+        <div v-if="hasMultipleImages" class="file-queue-nav">
+          <div class="queue-info">
+            <span class="current-file">{{ currentImageIndex + 1 }} of {{ imageQueue.length }}</span>
+            <span class="file-name">{{ selectedFile?.name || 'Unknown' }}</span>
+          </div>
+          <div class="queue-controls">
+            <button
+              class="nav-btn"
+              :disabled="currentImageIndex === 0"
+              @click="emit('switch-image', currentImageIndex - 1)"
+              title="Previous image"
+            >
+              <ChevronLeft class="nav-icon" />
+            </button>
+            <button
+              class="nav-btn"
+              :disabled="currentImageIndex >= imageQueue.length - 1"
+              @click="emit('switch-image', currentImageIndex + 1)"
+              title="Next image"
+            >
+              <ChevronRight class="nav-icon" />
+            </button>
+          </div>
+        </div>
+
         <div class="selected-info">
           <div class="file-preview">
             <img 
@@ -485,14 +548,56 @@ const resetEverything = () => {
             <div class="file-meta">{{ formatFileSize(selectedFile.size) }} • {{ selectedFile.type.split('/')[1].toUpperCase() }}</div>
             <div class="file-success">✓ Ready for conversion</div>
           </div>
-        </div>        <button
-          class="clear-btn"
-          @click.stop="clearSelection"
-          type="button"
-          title="Remove image and start over"
-        >
-          <X class="clear-icon" />
-        </button>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="file-actions">
+          <!-- Remove single file button -->
+          <button
+            class="remove-file-btn"
+            @click.stop="handleRemoveFile"
+            type="button"
+            :title="hasMultipleImages ? 'Remove this image from queue' : 'Remove image and start over'"
+          >
+            <X class="action-icon" />
+          </button>
+        </div>
+
+        <!-- Batch Processing Controls (only show if multiple files) -->
+        <div v-if="hasMultipleImages" class="batch-controls">
+          <div class="batch-actions">
+            <button
+              class="batch-btn convert-all-btn"
+              @click="emit('batch-convert')"
+              :disabled="batchProcessing"
+              title="Convert all images to SVG"
+            >
+              <Zap v-if="!batchProcessing" class="batch-icon" />
+              <Loader v-else class="batch-icon loading" />
+              <span>{{ batchProcessing ? 'Converting...' : 'Convert All' }}</span>
+            </button>
+            
+            <div class="download-group">
+              <button
+                class="batch-btn download-btn"
+                @click="emit('download-all')"
+                title="Download all converted SVG files individually"
+              >
+                <Download class="batch-icon" />
+                <span>Download All</span>
+              </button>
+              
+              <button
+                class="batch-btn download-zip-btn"
+                @click="emit('download-zip')"
+                title="Download all converted SVG files as ZIP"
+              >
+                <Archive class="batch-icon" />
+                <span>Download ZIP</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1182,6 +1287,185 @@ p {
   height: 1.25rem;
 }
 
+/* File Queue Navigation */
+.file-queue-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-medium);
+  border: 1px solid var(--border-color);
+}
+
+.queue-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.current-file {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.queue-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.nav-btn {
+  padding: 0.5rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-small);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.nav-btn:hover:not(:disabled) {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.nav-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.nav-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* File Actions */
+.file-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.remove-file-btn {
+  padding: 0.75rem;
+  background: var(--error-color);
+  color: white;
+  border: none;
+  border-radius: var(--radius-medium);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.remove-file-btn:hover {
+  background: var(--error-color);
+  transform: scale(1.05);
+  box-shadow: var(--shadow-medium);
+}
+
+.action-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Batch Controls */
+.batch-controls {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.batch-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.batch-btn {
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: var(--radius-medium);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.convert-all-btn {
+  background: var(--primary-color);
+  color: white;
+}
+
+.convert-all-btn:hover:not(:disabled) {
+  background: var(--primary-color-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-medium);
+}
+
+.convert-all-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.download-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.download-btn {
+  background: var(--success-color);
+  color: white;
+  flex: 1;
+}
+
+.download-btn:hover {
+  background: var(--success-color-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-medium);
+}
+
+.download-zip-btn {
+  background: var(--text-secondary);
+  color: white;
+  flex: 1;
+}
+
+.download-zip-btn:hover {
+  background: var(--text-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-medium);
+}
+
+.batch-icon {
+  width: 1rem;
+  height: 1rem;
+  stroke-width: 2;
+}
+
+.batch-icon.loading {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .method-tabs {
@@ -1214,6 +1498,45 @@ p {
   .camera-icon {
     width: 2.5rem;
     height: 2.5rem;
+  }
+  
+  /* Mobile batch processing styles */
+  .file-queue-nav {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: stretch;
+  }
+  
+  .queue-info {
+    text-align: center;
+  }
+  
+  .queue-controls {
+    justify-content: center;
+  }
+  
+  .batch-actions {
+    gap: 1rem;
+  }
+  
+  .download-group {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .batch-btn {
+    padding: 1rem;
+    font-size: 0.95rem;
+  }
+  
+  .selected-info {
+    flex-direction: column;
+    gap: 0.75rem;
+    text-align: center;
+  }
+  
+  .file-preview {
+    align-self: center;
   }
   
   h3 {
