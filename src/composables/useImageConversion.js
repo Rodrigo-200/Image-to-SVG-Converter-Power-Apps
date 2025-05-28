@@ -1,6 +1,6 @@
 /**
  * Image to SVG Converter Power Apps - Image Conversion Composable
- * Educational Project - Copyright (c) 2025 [Your Name]
+ * Educational Project - Copyright (c) 2025 Rodrigo Martins
  * Licensed under Educational & Personal Use License - see LICENSE file
  * 
  * This composable demonstrates Vue.js composition patterns, reactive state management,

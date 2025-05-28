@@ -1,6 +1,6 @@
 <!--
   Image to SVG Converter Power Apps - Main Application Component
-  Educational Project - Copyright (c) 2025 [Your Name]
+  Educational Project - Copyright (c) 2025 Rodrigo Martins
   Licensed under Educational & Personal Use License - see LICENSE file
   
   This file demonstrates Vue.js 3 Composition API, reactive state management,

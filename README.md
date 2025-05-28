@@ -179,8 +179,8 @@ This project demonstrates modern web development practices perfect for education
 #### 📝 **Proper Attribution Format**
 When referencing this project:
 ```
-Based on techniques from "Image to SVG Converter Power Apps" by [Your Name]
-Repository: https://github.com/[username]/image-to-svg-converter-power-apps
+Based on techniques from "Image to SVG Converter Power Apps" by Rodrigo Martins
+Repository: https://github.com/Rodrigo-200/image-to-svg-converter-power-apps
 ```
 
 #### 🎯 **Student-to-Student Note**
