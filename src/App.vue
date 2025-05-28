@@ -234,16 +234,20 @@ const convertAllToSvg = async () => {
           continue
         }
         
+        // Update current processing index for progress tracking
+        currentImageIndex.value = i
+        
         // Mark as being processed
         imageData.processed = false
         imageData.error = null
-        
-        // Convert this image
+          // Convert this image
         await convertImageToSvg(imageData.file, {
           removeBorder: settings.removeBorder,
           svgColor: settings.svgColor === '#000000' ? null : settings.svgColor,
           quality: settings.quality,
           size: settings.size
+        }, {
+          isBatchOperation: true // Prevent individual conversions from closing the modal
         })
         
         // Save the result
@@ -489,7 +493,7 @@ onMounted(() => {
             :has-multiple-images="hasMultipleImages"
             :batch-processing="isProcessing"
           />
-        </section><!-- Modern Loading Modal -->
+        </section>        <!-- Modern Loading Modal -->
         <div v-if="isProcessing" class="loading-overlay">
           <div class="loading-modal">
             <div class="loading-content">
@@ -498,24 +502,41 @@ onMounted(() => {
                 <div class="spinner-core"></div>
               </div>
               
-              <h3 class="loading-title">Converting to SVG</h3>
-              <p class="loading-subtitle">Please wait while we process your image...</p>
+              <h3 class="loading-title">
+                {{ hasMultipleImages ? 'Converting Images to SVG' : 'Converting to SVG' }}
+              </h3>
+              <p class="loading-subtitle">
+                {{ hasMultipleImages 
+                  ? `Processing ${currentImageIndex + 1} of ${imageQueue.length} images...` 
+                  : 'Please wait while we process your image...' 
+                }}
+              </p>
               
-              <div class="progress-container">
+              <!-- Current file name for batch processing -->
+              <div v-if="hasMultipleImages && currentImageFile" class="current-file-info">
+                <span class="current-file-label">Current file:</span>
+                <span class="current-file-name">{{ currentImageFile.name }}</span>
+              </div>
+                <div class="progress-container">
                 <div class="progress-bar">
                   <div class="progress-fill" :style="{ width: processingProgress + '%' }"></div>
                 </div>
                 <div class="progress-text">
-                  <span class="progress-percentage">{{ processingProgress }}%</span>
+                  <div class="progress-main">
+                    <span class="progress-percentage">{{ processingProgress }}%</span>
+                  </div>
+                  <div v-if="hasMultipleImages" class="progress-details">
+                    {{ Math.ceil((processingProgress / 100) * imageQueue.length) }} of {{ imageQueue.length }} completed
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div><!-- Main Workspace -->
+        </div>        <!-- Main Workspace -->
         <div class="workspace" v-if="hasImage">
           <div class="workspace-grid">
             <!-- Preview Area -->
-            <div class="preview-section">              <PreviewArea 
+            <div class="preview-section"><PreviewArea 
                 :image="currentImageFile"
                 :svg-result="currentPreviewSvg"
                 :background-color="settings.backgroundColor"
@@ -1237,6 +1258,44 @@ onMounted(() => {
   line-height: 1.4;
 }
 
+/* Current file info for batch processing */
+.current-file-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-medium);
+  border: 1px solid var(--border-color);
+  max-width: 100%;
+}
+
+.current-file-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.current-file-name {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  font-weight: 600;
+  text-align: center;
+  word-break: break-all;
+  max-width: 280px;
+  line-height: 1.4;
+}
+
+.progress-details {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  text-align: center;
+}
+
 /* Update progress styles for modal */
 .loading-modal .progress-container {
   width: 100%;
@@ -1281,13 +1340,20 @@ onMounted(() => {
 
 .loading-modal .progress-text {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.loading-modal .progress-main {
+  display: flex;
   justify-content: center;
   align-items: center;
 }
 
 .loading-modal .progress-percentage {
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 700;
   color: var(--primary-color);
 }
 
@@ -2437,6 +2503,7 @@ onMounted(() => {
   .logo-text {
     gap: 0.125rem;
   }
+  
   
   .header-controls {
     gap: 0.5rem;

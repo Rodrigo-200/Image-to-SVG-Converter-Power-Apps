@@ -506,13 +506,34 @@ const resetEverything = () => {
           </div>
         </div>
       </div>      <!-- File Selected Display -->
-      <div v-if="selectedFile" class="file-selected">        <!-- File Queue Navigation (only show if multiple files) -->
-        <div v-if="props.hasMultipleImages" class="file-queue-nav">
-          <div class="queue-info">
-            <span class="current-file">{{ props.currentImageIndex + 1 }} of {{ props.imageQueue.length }}</span>
-            <span class="file-name">{{ selectedFile?.name || 'Unknown' }}</span>
+      <div v-if="selectedFile" class="file-selected">
+        <!-- Single File or Current File Info -->
+        <div class="selected-info">
+          <div class="file-preview">
+            <img 
+              v-if="previewUrl" 
+              :src="previewUrl" 
+              :alt="selectedFile.name"
+              class="preview-thumbnail"
+            />
+            <FileImage v-else class="file-icon" />
           </div>
-          <div class="queue-controls">
+          <div class="file-details">
+            <div class="file-name-wrapper">
+              <div class="file-name">{{ selectedFile.name }}</div>
+              <span v-if="props.hasMultipleImages" class="file-counter">
+                {{ props.currentImageIndex + 1 }} of {{ props.imageQueue.length }}
+              </span>
+            </div>
+            <div class="file-meta">{{ formatFileSize(selectedFile.size) }} • {{ selectedFile.type.split('/')[1].toUpperCase() }}</div>
+            <div class="file-success">✓ Ready for conversion</div>
+          </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="file-actions">
+          <!-- Navigation for multiple files -->
+          <div v-if="props.hasMultipleImages" class="file-navigation">
             <button
               class="nav-btn"
               :disabled="props.currentImageIndex === 0"
@@ -530,38 +551,25 @@ const resetEverything = () => {
               <ChevronRight class="nav-icon" />
             </button>
           </div>
-        </div>
-
-        <div class="selected-info">
-          <div class="file-preview">
-            <img 
-              v-if="previewUrl" 
-              :src="previewUrl" 
-              :alt="selectedFile.name"
-              class="preview-thumbnail"
-            />
-            <FileImage v-else class="file-icon" />
-          </div>
-          <div class="file-details">
-            <div class="file-name">{{ selectedFile.name }}</div>
-            <div class="file-meta">{{ formatFileSize(selectedFile.size) }} • {{ selectedFile.type.split('/')[1].toUpperCase() }}</div>
-            <div class="file-success">✓ Ready for conversion</div>
-          </div>
-        </div>
-
-        <!-- Action buttons -->
-        <div class="file-actions">
-          <!-- Remove single file button -->
+          
+          <!-- Remove file button -->
           <button
             class="remove-file-btn"
             @click.stop="handleRemoveFile"
             type="button"
-            :title="hasMultipleImages ? 'Remove this image from queue' : 'Remove image and start over'"
+            :title="props.hasMultipleImages ? 'Remove this image from queue' : 'Remove image and start over'"
           >
             <X class="action-icon" />
           </button>
-        </div>        <!-- Batch Processing Controls (only show if multiple files) -->
+        </div>
+
+        <!-- Batch Processing Controls (only show if multiple files) -->
         <div v-if="props.hasMultipleImages" class="batch-controls">
+          <div class="batch-header">
+            <h4>Batch Processing</h4>
+            <p>Process all {{ props.imageQueue.length }} images at once</p>
+          </div>
+          
           <div class="batch-actions">
             <button
               class="batch-btn convert-all-btn"
@@ -574,7 +582,7 @@ const resetEverything = () => {
               <span>{{ props.batchProcessing ? 'Converting...' : 'Convert All' }}</span>
             </button>
             
-            <div class="download-group">
+            <div class="download-actions">
               <button
                 class="batch-btn download-btn"
                 @click="emit('download-all')"
@@ -1183,13 +1191,11 @@ p {
 /* File Selected */
 .file-selected {
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.5rem;
   background: var(--bg-secondary);
   border-radius: var(--radius-large);
-  border: 2px solid var(--success-color);
+  padding: 1.5rem;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-small);
   animation: slideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -1208,20 +1214,20 @@ p {
   display: flex;
   align-items: center;
   gap: 1rem;
-  flex: 1;
+  margin-bottom: 1rem;
 }
 
 .file-preview {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 4rem;
-  height: 4rem;
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
   border-radius: var(--radius-medium);
   overflow: hidden;
   background: var(--bg-tertiary);
-  border: 2px solid var(--success-color);
-  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-color);
 }
 
 .preview-thumbnail {
@@ -1231,33 +1237,53 @@ p {
 }
 
 .file-icon {
-  width: 2rem;
-  height: 2rem;
-  color: var(--success-color);
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--text-muted);
 }
 
 .file-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-name-wrapper {
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
 }
 
 .file-name {
   font-weight: 600;
   color: var(--text-primary);
   font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.file-counter {
+  background: var(--primary-color);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-small);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .file-meta {
+  color: var(--text-muted);
   font-size: 0.85rem;
-  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
 }
 
 .file-success {
-  font-size: 0.8rem;
   color: var(--success-color);
+  font-size: 0.85rem;
   font-weight: 500;
-  margin-top: 0.25rem;
 }
 
 .clear-btn {
@@ -1344,6 +1370,13 @@ p {
 /* File Actions */
 .file-actions {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.file-navigation {
+  display: flex;
   gap: 0.5rem;
 }
 
@@ -1373,14 +1406,37 @@ p {
 
 /* Batch Controls */
 .batch-controls {
-  margin-top: 1rem;
-  padding-top: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
   border-top: 1px solid var(--border-color);
+}
+
+.batch-header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.batch-header h4 {
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.batch-header p {
+  color: var(--text-secondary);
+  margin: 0;
+  font-size: 0.9rem;
 }
 
 .batch-actions {
   display: flex;
   flex-direction: column;
+  gap: 0.75rem;
+}
+
+.download-actions {
+  display: flex;
   gap: 0.75rem;
 }
 
@@ -1496,27 +1552,33 @@ p {
     width: 2.5rem;
     height: 2.5rem;
   }
-  
-  /* Mobile batch processing styles */
-  .file-queue-nav {
+    /* Mobile batch processing styles */
+  .file-actions {
     flex-direction: column;
     gap: 0.75rem;
     align-items: stretch;
   }
   
-  .queue-info {
-    text-align: center;
+  .file-navigation {
+    justify-content: center;
+    order: 2;
   }
   
-  .queue-controls {
-    justify-content: center;
+  .remove-file-btn {
+    order: 1;
+    align-self: center;
+  }
+  
+  .batch-controls {
+    margin-top: 1rem;
+    padding-top: 1rem;
   }
   
   .batch-actions {
     gap: 1rem;
   }
   
-  .download-group {
+  .download-actions {
     flex-direction: column;
     gap: 0.75rem;
   }

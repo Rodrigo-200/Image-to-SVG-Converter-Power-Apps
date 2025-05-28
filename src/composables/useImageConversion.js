@@ -330,9 +330,8 @@ export function useImageConversion() {  const isProcessing = ref(false)
       console.error('Live preview error:', err)
       livePreviewSvg.value = ''
     }
-  }
-  // Main conversion function using backend
-  const convertImageToSvg = async (imageFile, settings = {}) => {
+  }  // Main conversion function using backend
+  const convertImageToSvg = async (imageFile, settings = {}, options = {}) => {
     if (!imageFile) {
       throw new Error('No image file provided')
     }
@@ -343,16 +342,21 @@ export function useImageConversion() {  const isProcessing = ref(false)
       throw new Error('High-quality backend conversion is not available. Please run "npm run dev:full" to start the backend server, or use the live preview as an alternative.')
     }
 
-    isProcessing.value = true
-    processingProgress.value = 0
+    // Only set processing state if not part of a batch operation
+    const isBatchOperation = options.isBatchOperation || false
+    if (!isBatchOperation) {
+      isProcessing.value = true
+      processingProgress.value = 0
+    }
+    
     error.value = ''
     svgResult.value = ''
 
     try {
       console.log('🚀 Starting backend conversion...')
-      processingProgress.value = 10
-
-      // Prepare form data
+      if (!isBatchOperation) {
+        processingProgress.value = 10
+      }      // Prepare form data
       const formData = new FormData()
       formData.append('image', imageFile)
       formData.append('removeBorder', settings.removeBorder ? 'true' : 'false')
@@ -367,7 +371,9 @@ export function useImageConversion() {  const isProcessing = ref(false)
         quality: settings.quality
       })
 
-      processingProgress.value = 30
+      if (!isBatchOperation) {
+        processingProgress.value = 30
+      }
 
       // Send to backend
       const response = await fetch(`${BACKEND_URL}/convert-to-svg`, {
@@ -375,7 +381,9 @@ export function useImageConversion() {  const isProcessing = ref(false)
         body: formData
       })
 
-      processingProgress.value = 70
+      if (!isBatchOperation) {
+        processingProgress.value = 70
+      }
 
       if (!response.ok) {
         throw new Error(`Backend error: ${response.status} ${response.statusText}`)
@@ -390,25 +398,29 @@ export function useImageConversion() {  const isProcessing = ref(false)
 
       console.log('✅ Backend conversion successful!')
       console.log('📊 Original size:', result.originalSize)
-      console.log('📊 SVG size:', result.svgSize)
-
-      // Store result
+      console.log('📊 SVG size:', result.svgSize)      // Store result
       svgResult.value = result.svg
       livePreviewSvg.value = result.svg
-      processingProgress.value = 100
-
-      // Reset progress after a delay
-      setTimeout(() => {
-        isProcessing.value = false
-        processingProgress.value = 0
-      }, 1000)
+      
+      // Only update progress to 100% and reset processing state if not part of batch operation
+      if (!isBatchOperation) {
+        processingProgress.value = 100
+        // Reset progress after a delay
+        setTimeout(() => {
+          isProcessing.value = false
+          processingProgress.value = 0
+        }, 1000)
+      }
 
       return result.svg
 
     } catch (err) {
       console.error('❌ Conversion error:', err)
-      isProcessing.value = false
-      processingProgress.value = 0
+      // Only reset processing state if not part of batch operation
+      if (!isBatchOperation) {
+        isProcessing.value = false
+        processingProgress.value = 0
+      }
       error.value = err.message
       throw err
     }

@@ -40,11 +40,11 @@
   --success-color-dark: #059669;
   --warning-color: #f59e0b;
   --error-color: #ef4444;
-  
-  --radius-small: 6px;
+    --radius-small: 6px;
   --radius-medium: 10px;
   --radius-large: 16px;
   --radius-xl: 20px;
+  --radius-full: 9999px;
   
   --spacing-xs: 4px;
   --spacing-sm: 8px;
