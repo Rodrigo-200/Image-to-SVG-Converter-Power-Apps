@@ -508,6 +508,17 @@ watch(showBorderPreview, async (show) => {
   font-weight: 600;
 }
 
+/* Ensure desktop title is visible on larger screens */
+@media (min-width: 769px) {
+  .desktop-title {
+    display: block !important;
+  }
+  
+  .mobile-info-header {
+    display: none !important;
+  }
+}
+
 .info-content {
   transition: all 0.3s ease;
 }

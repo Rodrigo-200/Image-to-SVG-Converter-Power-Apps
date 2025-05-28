@@ -5,7 +5,7 @@ import PreviewArea from './components/PreviewArea.vue'
 import ControlsPanel from './components/ControlsPanel.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 import { useImageConversion } from './composables/useImageConversion.js'
-import { Settings, Download, Palette, Maximize2, ChevronUp, ChevronDown, Minimize2, Sparkles, Image, RefreshCw, FileCode, Zap, Grid3X3, Layers, Smartphone, Sparkle, Box, Wifi, WifiOff, Globe } from 'lucide-vue-next'
+import { Settings, Download, Palette, Maximize2, ChevronUp, ChevronDown, Minimize2, Sparkles, Image, RefreshCw, FileCode, Zap, Grid3X3, Layers, Smartphone, Sparkle, Box, Wifi, WifiOff, Globe, Scale } from 'lucide-vue-next'
 
 // Application state
 const currentImage = ref(null)
@@ -191,22 +191,29 @@ onMounted(() => {
           <p class="hero-description">
             Transform your images into scalable vector graphics, perfectly optimized for Microsoft Power Apps. 
             Support for multiple formats with professional-grade conversion.
-          </p>
-          <div class="hero-features">
+          </p>          <div class="hero-features">
             <div class="feature-item">
-              <div class="feature-icon">✨</div>
+              <div class="feature-icon">
+                <Sparkles class="feature-icon-svg" />
+              </div>
               <span>High-Quality Conversion</span>
             </div>
             <div class="feature-item">
-              <div class="feature-icon">🎨</div>
+              <div class="feature-icon">
+                <Palette class="feature-icon-svg" />
+              </div>
               <span>Color Customization</span>
             </div>
             <div class="feature-item">
-              <div class="feature-icon">📱</div>
+              <div class="feature-icon">
+                <Smartphone class="feature-icon-svg" />
+              </div>
               <span>Power Apps Ready</span>
             </div>
             <div class="feature-item">
-              <div class="feature-icon">⚡</div>
+              <div class="feature-icon">
+                <Zap class="feature-icon-svg" />
+              </div>
               <span>Instant Preview</span>
             </div>
           </div>
@@ -373,19 +380,22 @@ onMounted(() => {
                   <!-- Quality Settings -->
                   <div class="setting-group">
                     <label class="setting-title">Quality</label>
-                    <div class="quality-buttons-new">
-                      <button 
+                    <div class="quality-buttons-new">                      <button 
                         v-for="option in [
-                          { value: 'low', label: 'Fast', icon: '⚡' },
-                          { value: 'medium', label: 'Balanced', icon: '⚖️' },
-                          { value: 'high', label: 'High', icon: '✨' }
+                          { value: 'low', label: 'Fast', icon: 'zap' },
+                          { value: 'medium', label: 'Balanced', icon: 'scale' },
+                          { value: 'high', label: 'High', icon: 'sparkles' }
                         ]"
                         :key="option.value"
                         @click="Object.assign(settings, { quality: option.value })"
                         class="quality-btn-new"
                         :class="{ active: settings.quality === option.value }"
                       >
-                        <span class="quality-icon">{{ option.icon }}</span>
+                        <span class="quality-icon">
+                          <Zap v-if="option.icon === 'zap'" class="quality-icon-svg" />
+                          <Scale v-else-if="option.icon === 'scale'" class="quality-icon-svg" />
+                          <Sparkles v-else-if="option.icon === 'sparkles'" class="quality-icon-svg" />
+                        </span>
                         <span class="quality-label">{{ option.label }}</span>
                       </button>
                     </div>
@@ -703,6 +713,12 @@ onMounted(() => {
   border-radius: 50%;
   color: white;
   font-size: 1rem;
+}
+
+.feature-icon-svg {
+  width: 1rem;
+  height: 1rem;
+  stroke-width: 2;
 }
 
 .hero-visual {
@@ -1471,10 +1487,18 @@ onMounted(() => {
     color: var(--primary-color);
     box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.2);
   }
-
   .quality-icon {
     font-size: 1.25rem;
     line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .quality-icon-svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    stroke-width: 2;
   }
 
   .quality-label {

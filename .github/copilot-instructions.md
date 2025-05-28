@@ -23,9 +23,9 @@ This is a Vue.js web application that converts images to SVG format specifically
 ### UI/UX Requirements
 - **Modern Design**: Clean, minimal, professional appearance
 - **Smooth Animations**: Subtle transitions and micro-interactions
-- **Responsive Layout**: Works on desktop, tablet, and mobile
+- **Responsive Layout**: Works on desktop, tablet, and mobile (768px breakpoint)
 - **Dark/Light Theme**: Theme toggle with system preference detection
-- **Icons**: Use Lucide Vue Next for consistent iconography
+- **Icons**: Use Lucide Vue Next for consistent iconography - NO EMOJIS ALLOWED
 - **Color Scheme**: Professional palette suitable for business applications
 
 ### Customization Options
@@ -34,6 +34,30 @@ This is a Vue.js web application that converts images to SVG format specifically
 - **Border Removal**: Automatically detect and remove whitespace/borders
 - **Size Options**: Preset sizes for Power Apps controls (small, medium, large)
 - **Quality Settings**: Balance between file size and detail preservation
+
+## Design System & Icon Guidelines
+
+### Icon Standards
+- **NEVER USE EMOJIS**: All icons must be from Lucide Vue Next library
+- **Consistent Sizing**: Use predefined CSS classes for icon sizing (`.feature-icon-svg`, `.quality-icon-svg`)
+- **Proper Stroke Width**: Standard stroke-width: 2 for all icons
+- **Semantic Icons**: Choose icons that semantically represent the feature/action
+
+### Icon Mapping Guidelines
+- **Performance/Speed**: Use `Zap` icon
+- **Design/Customization**: Use `Palette` icon  
+- **Mobile/Responsive**: Use `Smartphone` icon
+- **Enhancement/Quality**: Use `Sparkles` icon
+- **Balance/Settings**: Use `Scale` icon
+- **Visual/Preview**: Use `Eye` icon
+- **Upload**: Use `Upload` icon
+- **Download**: Use `Download` icon
+
+### Responsive Design Rules
+- **Desktop (>768px)**: Show `.desktop-title` with `display: block !important`
+- **Mobile (≤768px)**: Hide `.desktop-title` with `display: none !important`
+- **Mobile Action Bar**: Fixed bottom bar with collapsible sections
+- **Touch Targets**: Minimum 44px for touch-friendly interaction
 
 ## Technical Stack
 
@@ -57,7 +81,8 @@ src/
 │   ├── PreviewArea.vue       # Image and SVG preview
 │   ├── ControlsPanel.vue     # Conversion settings
 │   ├── DownloadOptions.vue   # Export options
-│   └── ThemeToggle.vue       # Dark/light theme toggle
+│   ├── ThemeToggle.vue       # Dark/light theme toggle
+│   └── UnifiedImageInput.vue # Main input component
 ├── composables/
 │   ├── useImageConversion.js # Core conversion logic
 │   ├── useClipboard.js       # Clipboard functionality
@@ -81,10 +106,11 @@ src/
 
 ### CSS/Styling
 - Use CSS custom properties for theming
-- Implement proper responsive design (mobile-first)
+- Implement proper responsive design (mobile-first approach)
 - Use semantic class names (BEM methodology preferred)
 - Add smooth transitions for all interactive elements
 - Ensure proper contrast ratios for accessibility
+- **NEVER** use inline styles for emoji icons - always use Lucide Vue icons
 
 ### Image Processing
 - Handle all common image formats gracefully
@@ -107,6 +133,67 @@ src/
 4. **Accessibility**: Keyboard navigation, screen reader support, proper ARIA labels
 5. **Mobile-Friendly**: Touch-friendly interface and responsive design
 
+## Recent Improvements & Standards
+
+### Icon Implementation Pattern
+When replacing emojis with Lucide icons:
+```vue
+<!-- OLD (NEVER DO THIS) -->
+<span class="emoji-icon">✨</span>
+
+<!-- NEW (CORRECT APPROACH) -->
+<Sparkles class="feature-icon-svg" />
+```
+
+### Conditional Icon Rendering
+For dynamic icon selection:
+```vue
+<!-- Template -->
+<Zap class="quality-icon-svg" v-if="icon === 'zap'" />
+<Scale class="quality-icon-svg" v-if="icon === 'scale'" />
+<Sparkles class="quality-icon-svg" v-if="icon === 'sparkles'" />
+
+<!-- Script -->
+const qualityIcons = ['zap', 'scale', 'sparkles']
+```
+
+### CSS Classes for Icons
+```css
+.feature-icon-svg {
+  width: 1rem;
+  height: 1rem;
+  stroke-width: 2;
+}
+
+.quality-icon-svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  stroke-width: 2;
+}
+```
+
+### Media Query Standards
+```css
+/* Desktop styles (default) */
+.desktop-element {
+  display: block;
+}
+
+/* Mobile specific - use max-width: 768px */
+@media (max-width: 768px) {
+  .desktop-element {
+    display: none !important;
+  }
+}
+
+/* Desktop override - use min-width: 769px */
+@media (min-width: 769px) {
+  .desktop-element {
+    display: block !important;
+  }
+}
+```
+
 ## Future Enhancement Areas
 - Batch processing for multiple images
 - SVG animation options
@@ -122,6 +209,7 @@ src/
 - Optimize bundle size and loading performance
 - Follow Vue.js style guide and best practices
 - Document complex algorithms and business logic
+- **ALWAYS** use Lucide Vue icons instead of emojis
 
 ## Design Tokens
 - Use consistent spacing scale (4px, 8px, 16px, 24px, 32px, 48px)
@@ -130,4 +218,12 @@ src/
 - Maintain consistent border radius and shadow patterns
 - Ensure proper focus states for all interactive elements
 
-Remember: Always prioritize user experience, maintain clean and readable code, and ensure the application remains performant even with large images or multiple conversions.
+## Quality Assurance Rules
+1. **Icon Consistency**: All icons must be Lucide Vue components
+2. **Responsive Testing**: Test all features at 768px breakpoint
+3. **Accessibility**: Verify keyboard navigation and screen reader compatibility
+4. **Performance**: Monitor conversion times and UI responsiveness
+5. **Cross-browser**: Test on Chrome, Firefox, Safari, and Edge
+6. **Mobile UX**: Verify touch targets are minimum 44px
+
+Remember: Always prioritize user experience, maintain clean and readable code, and ensure the application remains performant even with large images or multiple conversions. The 768px breakpoint is critical for responsive design decisions.
