@@ -183,12 +183,15 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
-**Version 1.2.0** - Batch Processing Update
+**Version 1.3.1** - Enhanced Batch Processing
 
 Latest features:
-- Batch processing for multiple images
-- Enhanced file queue management
-- Improved mobile experience
+- Complete batch processing implementation
+- File queue navigation with previous/next controls
+- Smart X button behavior (remove file vs reset app)
+- Download all files individually or as ZIP archive
+- Mobile-responsive batch controls
+- Enhanced error handling and progress tracking
 - Better error handling and user feedback
 
 
