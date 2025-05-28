@@ -219,7 +219,7 @@ This project can serve as:
 
 ### 💼 **Commercial Licensing Available**
 For commercial use, extended rights, or special permissions:
-- 📧 **Email**: [your-email@domain.com]
+- 📧 **Email**: rodrigo.contactme@manyme.com
 - 💬 **Affordable student-friendly options** available
 - 🤝 **Collaboration opportunities** for interesting projects
 
@@ -235,7 +235,7 @@ This project represents hundreds of hours of learning, research, and development
 ## 🔗 Links
 
 - [📖 Documentation](README.md)
-- [🐛 Issues](https://github.com/yourusername/image-to-svg-converter-power-apps/issues)
+- [🐛 Issues](https://github.com/Rodrigo-200/image-to-svg-converter-power-apps/issues)
 - [🎯 Live Demo](https://image-to-svg-converter-power-apps.vercel.app/)
 - [📋 Changelog](CHANGELOG.md)
 

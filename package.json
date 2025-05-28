@@ -19,11 +19,11 @@
   "license": "SEE LICENSE FILE",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/image-to-svg-converter-power-apps.git"
+    "url": "git+https://github.com/Rodrigo-200/image-to-svg-converter-power-apps.git"
   },
-  "homepage": "https://github.com/yourusername/image-to-svg-converter-power-apps#readme",
+  "homepage": "https://github.com/Rodrigo-200/image-to-svg-converter-power-apps#readme",
   "bugs": {
-    "url": "https://github.com/yourusername/image-to-svg-converter-power-apps/issues"
+    "url": "https://github.com/Rodrigo-200/image-to-svg-converter-power-apps/issues"
   },
   "scripts": {
     "dev": "vite",
